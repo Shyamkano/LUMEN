@@ -32,23 +32,42 @@ export async function signup(formData: FormData): Promise<{ error: string } | ne
   const fullName = formData.get('fullName') as string;
   const username = formData.get('username') as string;
 
-  if (!email || !password) {
-    return { error: 'Email and password are required.' };
-  }
+  // Clean username: remove @ and whitespace
+  const cleanUsername = username.replace(/[@\s]/g, '').toLowerCase();
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
       data: {
         full_name: fullName,
-        username: username,
+        username: cleanUsername,
       }
     }
   });
 
   if (error) {
+    console.error('[AUTH ERROR DETAILED]:', error); // This will show us the REAL reason in your terminal
+    if (error.message.includes('unique constraint')) {
+      return { error: 'This username is already taken.' };
+    }
     return { error: error.message };
+  }
+
+  // Fallback: Manually ensure profile exists if trigger failed
+  // We wrap this in a try/catch so it doesn't block the main signup
+  if (data.user) {
+    try {
+      await supabase
+        .from('profiles')
+        .upsert({
+          id: data.user.id,
+          full_name: fullName,
+          username: cleanUsername,
+        }, { onConflict: 'id' });
+    } catch (profileErr) {
+      console.error('[PROFILE SYNC ERROR]:', profileErr);
+    }
   }
 
   revalidatePath('/', 'layout');

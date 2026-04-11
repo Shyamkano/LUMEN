@@ -85,7 +85,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const authorName = post.is_anonymous
     ? (post.anonymous_identity?.alias_name || 'Anonymous')
-    : (post.profile?.full_name || 'Author');
+    : (post.profile?.full_name || post.profile?.username || 'Archive Resident');
 
   const TYPE_ICONS = { blog: FileText, micro: Zap, code: Code, audio: Mic };
   const TypeIcon = TYPE_ICONS[post.type as keyof typeof TYPE_ICONS] || FileText;
@@ -274,7 +274,7 @@ export default async function PostPage({ params }: PostPageProps) {
             <div className="space-y-4">
               <h4 className="font-extrabold text-2xl text-foreground tracking-tight">{authorName}</h4>
               <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                {post.profile?.bio || `Deep thinker and creator sharing ideas on LUMEN.`}
+                {post.profile?.bio || `Curating signals and chronicles on LUMEN.`}
               </p>
             </div>
             {!post.is_anonymous && !isOwnPost && post.author_id && (
