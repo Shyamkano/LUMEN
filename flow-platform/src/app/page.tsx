@@ -25,7 +25,7 @@ export default async function Home() {
           {/* Compressed Feed Header */}
           <header className="animate-reveal">
             <div className="flex items-center gap-4 mb-2 overflow-hidden">
-               <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter">
+              <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter">
                 Dialogue <span className="italic font-light opacity-60">& Archive.</span>
               </h1>
             </div>
@@ -48,7 +48,7 @@ export default async function Home() {
 
           {!user && (
             <div className="p-8 rounded-[2rem] bg-card border border-border transition-all hover:shadow-2xl hover:shadow-foreground/5">
-              <h3 className="text-xl font-black text-foreground mb-3 font-serif-heading italic">Join the FLOW ✨</h3>
+              <h3 className="text-xl font-black text-foreground mb-3 font-serif-heading italic">Join the LUMEN ✨</h3>
               <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
                 Connect with a community sharing ideas across multiple formats. No noise, just signal.
               </p>

@@ -37,7 +37,7 @@ export default function SignupPage() {
     <div className="min-h-[80vh] flex items-center justify-center px-6">
       <div className="w-full max-w-md">
         <div className="text-center mb-10 animate-reveal">
-          <h1 className="text-4xl font-serif font-black text-zinc-900 mb-3">Join FLOW</h1>
+          <h1 className="text-4xl font-serif font-black text-zinc-900 mb-3">Join LUMEN</h1>
           <p className="text-zinc-500">Create your account and start publishing</p>
         </div>
 

@@ -274,7 +274,7 @@ export default async function PostPage({ params }: PostPageProps) {
             <div className="space-y-4">
               <h4 className="font-extrabold text-2xl text-foreground tracking-tight">{authorName}</h4>
               <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                {post.profile?.bio || `Deep thinker and creator sharing ideas on FLOW.`}
+                {post.profile?.bio || `Deep thinker and creator sharing ideas on LUMEN.`}
               </p>
             </div>
             {!post.is_anonymous && !isOwnPost && post.author_id && (

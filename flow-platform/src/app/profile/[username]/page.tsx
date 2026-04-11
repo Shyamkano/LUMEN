@@ -43,7 +43,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   return (
     <div className="max-w-7xl mx-auto px-6 py-20">
       <div className="flex flex-col lg:grid lg:grid-cols-[1fr_320px] gap-16 items-start">
-        
+
         {/* Main profile section */}
         <div className="flex-1 w-full space-y-20">
           {/* Header */}
@@ -58,7 +58,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                 </div>
               )}
             </div>
-            
+
             <div className="flex-1 pt-4 text-center md:text-left">
               <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
                 <div>
@@ -68,12 +68,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
                 {isOwnProfile && (
                   <Link href="/settings">
                     <Button variant="outline" className="rounded-full h-12 px-8 font-black uppercase tracking-widest text-xs">
-                       Update Identity
+                      Update Identity
                     </Button>
                   </Link>
                 )}
               </div>
-              
+
               <p className="text-foreground mt-8 max-w-2xl leading-relaxed text-lg font-medium">
                 {profile.bio || `A silent observer in the flow of information.`}
               </p>
@@ -116,44 +116,44 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             ) : (
               <div className="py-24 text-center rounded-[3rem] border border-dashed border-border bg-muted/5">
                 <p className="text-muted-foreground font-black uppercase tracking-widest text-sm">
-                  {isOwnProfile ? "Your archive is currently empty." : "This individual has not yet contributed to the flow."}
+                  {isOwnProfile ? "Your archive is currently empty." : "This individual has not yet contributed to the LUMEN."}
                 </p>
               </div>
             )}
           </div>
         </div>
-        
+
         {/* Right Sidebar */}
         <aside className="w-full sticky top-28 h-fit space-y-12 animate-reveal">
-           <div className="p-8 rounded-[2.5rem] bg-card border border-border shadow-2xl shadow-foreground/5">
-              <h4 className="font-black text-[10px] text-muted-foreground uppercase tracking-[0.3em] mb-8">Metadata</h4>
-              <div className="space-y-8">
-                <Link href={`/profile/${username}/followers`} className="flex justify-between items-end group">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Followers</span>
-                  <span className="text-2xl font-black text-foreground tabular-nums group-hover:scale-110 transition-transform origin-right">{followers}</span>
-                </Link>
-                <Link href={`/profile/${username}/following`} className="flex justify-between items-end group">
-                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Following</span>
-                  <span className="text-2xl font-black text-foreground tabular-nums group-hover:scale-110 transition-transform origin-right">{following}</span>
-                </Link>
+          <div className="p-8 rounded-[2.5rem] bg-card border border-border shadow-2xl shadow-foreground/5">
+            <h4 className="font-black text-[10px] text-muted-foreground uppercase tracking-[0.3em] mb-8">Metadata</h4>
+            <div className="space-y-8">
+              <Link href={`/profile/${username}/followers`} className="flex justify-between items-end group">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Followers</span>
+                <span className="text-2xl font-black text-foreground tabular-nums group-hover:scale-110 transition-transform origin-right">{followers}</span>
+              </Link>
+              <Link href={`/profile/${username}/following`} className="flex justify-between items-end group">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest group-hover:text-foreground transition-colors">Following</span>
+                <span className="text-2xl font-black text-foreground tabular-nums group-hover:scale-110 transition-transform origin-right">{following}</span>
+              </Link>
 
-                
-                {!isOwnProfile && (
-                   <div className="pt-4">
-                     <FollowButton followingId={profile.id} className="w-full h-12 rounded-full font-black uppercase tracking-widest text-xs" />
-                   </div>
-                )}
-              </div>
-           </div>
 
-           <div className="px-8 flex flex-col items-center md:items-start">
-             <h5 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-6">Discovery</h5>
-             <div className="flex flex-wrap gap-2">
-               {['Philosophy', 'Systems', 'Stories'].map(t => (
-                 <span key={t} className="px-4 py-2 bg-muted/5 border border-border text-[10px] font-black uppercase tracking-widest text-foreground rounded-full hover:bg-foreground hover:text-background transition-all cursor-pointer">{t}</span>
-               ))}
-             </div>
-           </div>
+              {!isOwnProfile && (
+                <div className="pt-4">
+                  <FollowButton followingId={profile.id} className="w-full h-12 rounded-full font-black uppercase tracking-widest text-xs" />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="px-8 flex flex-col items-center md:items-start">
+            <h5 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-6">Discovery</h5>
+            <div className="flex flex-wrap gap-2">
+              {['Philosophy', 'Systems', 'Stories'].map(t => (
+                <span key={t} className="px-4 py-2 bg-muted/5 border border-border text-[10px] font-black uppercase tracking-widest text-foreground rounded-full hover:bg-foreground hover:text-background transition-all cursor-pointer">{t}</span>
+              ))}
+            </div>
+          </div>
         </aside>
 
       </div>
