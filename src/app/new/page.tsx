@@ -252,7 +252,7 @@ export default function NewPostPage() {
       {/* Top bar */}
       <div className="flex items-center justify-between mb-12">
         <div className="flex items-center gap-6">
-          <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
+          <Link href="/feed" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
             ← Back
           </Link>
 

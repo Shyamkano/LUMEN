@@ -111,7 +111,7 @@ export default async function PostPage({ params }: PostPageProps) {
           {/* Top Metadata */}
           <div className="flex items-center justify-between gap-4 mb-12">
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/feed" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
                 Archive
               </Link>
               <span className="text-border">/</span>

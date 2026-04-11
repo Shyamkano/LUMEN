@@ -43,10 +43,16 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
             LUMEN
           </Link>
           <Link
-            href="/intro"
+            href="/"
             className="hidden lg:block text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all"
           >
             About
+          </Link>
+          <Link
+            href="/feed"
+            className="hidden lg:block text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all"
+          >
+            Explore
           </Link>
           {user && (
             <Link

@@ -1,111 +1,86 @@
-import { getPosts } from '@/app/actions/posts';
-import { FeedList } from '@/components/feed/FeedList';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
-import { PenTool, Zap, Code, Mic, TrendingUp } from 'lucide-react';
+import { PenTool, Zap, Code } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import type { Post } from '@/types';
 
-export default async function Home() {
+export default async function LandingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch recent posts for the sidebar trending widget
-  const recentPosts = await getPosts(undefined);
-  const trendingList = recentPosts.slice(0, 4);
-
   return (
-    <div className="max-w-7xl mx-auto px-6 relative">
-      {/* Background Glows for 'Shine' */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-foreground/5 blur-[120px] rounded-full pointer-events-none animate-pulse" />
-      <div className="absolute top-1/2 -right-24 w-64 h-64 bg-foreground/5 blur-[100px] rounded-full pointer-events-none" />
+    <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto px-6 relative flex flex-col justify-center overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[40vh] bg-foreground/[0.02] blur-[100px] rounded-full pointer-events-none" />
+      
+      <main className="relative z-10 animate-reveal flex flex-col items-start gap-4 py-4">
+        <span className="text-[9px] font-black uppercase tracking-[0.5em] text-muted-foreground border border-border px-3 py-1 rounded-full shadow-sm">
+          Luminous Network
+        </span>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-16 relative py-12">
-        <div className="space-y-12">
-          {/* Compressed Feed Header */}
-          <header className="animate-reveal">
-            <div className="flex items-center gap-4 mb-2 overflow-hidden">
-              <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter">
-                Dialogue <span className="italic font-light opacity-60">& Archive.</span>
-              </h1>
-            </div>
-            <p className="text-muted-foreground font-medium tracking-tight">Exploring the latest luminous logs from the network.</p>
-          </header>
+        <h1 className="text-5xl md:text-6xl lg:text-[5.5rem] font-black leading-[0.8] text-foreground tracking-tighter">
+          CREATE.
+          <br />
+          <span className="italic font-light opacity-80">without limits.</span>
+        </h1>
 
-          {/* Feed */}
-          <section className="pb-24">
-            <div className="flex items-center gap-4 mb-10">
-              <h2 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground">Recent Synchronizations</h2>
-              <div className="h-px flex-1 bg-border/40" />
-            </div>
-            <FeedList />
-          </section>
+        <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-tight font-medium tracking-tight">
+          The premier monochrome space for radical thinkers to share their most luminous archive and logs.
+        </p>
+
+        <div className="flex gap-4 mt-2">
+          {user ? (
+            <Link href="/dashboard">
+              <Button className="rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-foreground/5 transition-all hover:scale-105 active:scale-95">
+                Go to Dashboard
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/auth/signup">
+              <Button className="rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-foreground/5 transition-all hover:scale-105 active:scale-95">
+                Join Lumen
+              </Button>
+            </Link>
+          )}
+          <Link href="/feed">
+            <Button variant="outline" className="rounded-full px-6 h-10 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all">
+              Enter Feed
+            </Button>
+          </Link>
         </div>
 
-
-        {/* --- SIDEBAR --- */}
-        <aside className="hidden lg:block space-y-12 sticky top-28 h-fit">
-
-          {!user && (
-            <div className="p-8 rounded-[2rem] bg-card border border-border transition-all hover:shadow-2xl hover:shadow-foreground/5">
-              <h3 className="text-xl font-black text-foreground mb-3 font-serif-heading italic">Join the LUMEN ✨</h3>
-              <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
-                Connect with a community sharing ideas across multiple formats. No noise, just signal.
-              </p>
-              <Link href="/auth/signup">
-                <Button className="w-full rounded-full h-12">Create Account</Button>
-              </Link>
+        {/* Feature grid - Compact & Tighter */}
+        <div className="grid grid-cols-3 gap-6 mt-8 w-full border-t border-border/50 pt-8">
+          <div className="flex flex-col gap-2">
+            <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center shadow-md">
+              <PenTool size={16} strokeWidth={2.5} />
             </div>
-          )}
-
-          {/* Trending Posts Widget */}
-          <div className="space-y-8">
-            <div className="flex items-center gap-3 px-2">
-              <TrendingUp size={20} className="text-foreground" />
-              <h3 className="text-lg font-black uppercase tracking-tight text-foreground">Trending</h3>
-            </div>
-
-            <div className="space-y-8">
-              {trendingList.map((post: any) => (
-                <div key={post.id} className="group flex flex-col gap-2 px-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-foreground text-background flex items-center justify-center text-[10px] font-black">
-                      {(post.profile?.full_name || post.anonymous_identity?.alias_name || 'U').charAt(0).toUpperCase()}
-                    </div>
-                    {post.profile?.username ? (
-                      <Link href={`/profile/${post.profile.username}`} className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
-                        {post.profile?.full_name || 'User'}
-                      </Link>
-                    ) : (
-                      <span className="text-xs font-bold text-muted-foreground">
-                        {post.profile?.full_name || post.anonymous_identity?.alias_name || 'Anonymous'}
-                      </span>
-                    )}
-                  </div>
-                  <Link href={`/post/${post.slug}`}>
-                    <h4 className="text-base font-bold leading-tight text-foreground group-hover:underline underline-offset-4 decoration-2 transition-all line-clamp-2">
-                      {post.title}
-                    </h4>
-                  </Link>
-                </div>
-              ))}
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Curation</h3>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Deep writing and meticulous archive logs.</p>
             </div>
           </div>
-
-          <div className="pt-8 border-t border-border">
-            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6">Explore Topics</h3>
-            <div className="flex flex-wrap gap-2">
-              {['Education', 'Programming', 'Self Improvement', 'Productivity', 'Research', 'Life Logs'].map(tag => (
-                <Link key={tag} href="/" className="px-4 py-2 rounded-full bg-muted/5 hover:bg-foreground hover:text-background text-foreground text-xs font-bold transition-all border border-border">
-                  {tag}
-                </Link>
-              ))}
+          <div className="flex flex-col gap-2">
+            <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center shadow-md">
+              <Zap size={16} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Velocity</h3>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Rapid insights and micro-logs with zero friction.</p>
             </div>
           </div>
-
-        </aside>
-      </div>
+          <div className="flex flex-col gap-2">
+            <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center shadow-md">
+              <Code size={16} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Structure</h3>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Technical documentation and project logs.</p>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
-
   );
 }
+
+

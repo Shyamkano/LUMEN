@@ -68,7 +68,7 @@ export default async function SearchPage({
           <p className="text-sm font-black text-muted-foreground uppercase tracking-[0.4em] italic mb-8">
             The archive holds no record of this query.
           </p>
-          <Link href="/">
+          <Link href="/feed">
             <Button variant="outline" className="rounded-full px-10 h-12 font-black uppercase tracking-widest text-[10px]">
               Return to Feed
             </Button>
