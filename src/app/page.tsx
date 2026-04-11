@@ -17,17 +17,17 @@ export default async function LandingPage() {
           Luminous Network
         </span>
 
-        <h1 className="text-5xl md:text-6xl lg:text-[5.5rem] font-black leading-[0.8] text-foreground tracking-tighter">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black leading-[0.8] text-foreground tracking-tighter">
           CREATE.
           <br />
           <span className="italic font-light opacity-80">without limits.</span>
         </h1>
 
-        <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-tight font-medium tracking-tight">
+        <p className="text-base md:text-xl text-muted-foreground max-w-xl leading-tight font-medium tracking-tight mt-2">
           The premier monochrome space for radical thinkers to share their most luminous archive and logs.
         </p>
 
-        <div className="flex gap-4 mt-2">
+        <div className="flex flex-wrap gap-4 mt-6">
           {user ? (
             <Link href="/dashboard">
               <Button className="rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-foreground/5 transition-all hover:scale-105 active:scale-95">
@@ -48,8 +48,8 @@ export default async function LandingPage() {
           </Link>
         </div>
 
-        {/* Feature grid - Compact & Tighter */}
-        <div className="grid grid-cols-3 gap-6 mt-8 w-full border-t border-border/50 pt-8">
+        {/* Feature grid - Responsive */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-6 mt-12 md:mt-8 w-full border-t border-border/50 pt-8">
           <div className="flex flex-col gap-2">
             <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center shadow-md">
               <PenTool size={16} strokeWidth={2.5} />

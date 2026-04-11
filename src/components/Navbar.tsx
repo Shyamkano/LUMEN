@@ -38,7 +38,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
         <div className="flex items-center gap-10">
           <Link
             href="/"
-            className="text-3xl font-black tracking-tighter text-black hover:opacity-70 transition-all uppercase shrink-0"
+            className="text-2xl sm:text-3xl font-black tracking-tighter text-black hover:opacity-70 transition-all uppercase shrink-0"
           >
             LUMEN
           </Link>
@@ -50,14 +50,14 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
           </Link>
           <Link
             href="/feed"
-            className="hidden lg:block text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all"
+            className="hidden sm:block text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all"
           >
             Explore
           </Link>
           {user && (
             <Link
               href="/dashboard"
-              className="hidden lg:block text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all"
+              className="hidden md:block text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all"
             >
               Dashboard
             </Link>
