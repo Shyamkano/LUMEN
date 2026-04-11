@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-primary: var(--foreground);
+  --color-secondary: var(--muted);
+}
+
+:root {
+  color-scheme: light !important;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-border: #f8f8f8;
+  --muted: #fafafa;
+  --muted-foreground: #525252;
+  --border: #ececec;
+  --accent: #111111;
+  --accent-foreground: #ffffff;
+
+  --font-heading: 'Inter', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-body: 'Lora', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+
+* {
+  box-sizing: border-box;
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+strong,
+b {
+  color: var(--foreground) !important;
+  font-weight: 800;
+}
+
+
+/* === Premium Typography === */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: var(--foreground);
+}
+
+.font-serif-heading {
+  font-family: var(--font-serif);
+}
+
+/* === Editor Content Styles === */
+.editor-content {
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: var(--foreground);
+}
+
+.editor-content h1 {
+  font-size: 2.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.editor-content h2 {
+  font-size: 1.875rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.editor-content h3 {
+  font-size: 1.5rem;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.editor-content pre {
+  background: var(--card);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  overflow-x: auto;
+}
+
+.editor-content code {
+  font-family: var(--font-mono);
+  background: var(--card-border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.editor-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.editor-content blockquote {
+  border-left: 2px solid var(--foreground);
+  padding-left: 1.5rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.editor-content img {
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+/* TipTap placeholder */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--muted-foreground);
+  opacity: 0.5;
+  pointer-events: none;
+  height: 0;
+  font-style: italic;
+}
+
+.ProseMirror {
+  outline: none !important;
+}
+
+/* === Animations === */
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-reveal {
+  animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+
+/* === Readability & Selection === */
+body {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: rgba(139, 92, 246, 0.2);
+  color: inherit;
+}
+
+/* === Reading Content === */
+.reading-content {
+  font-family: var(--font-body);
+  font-size: 20px;
+  line-height: 1.8;
+  color: var(--foreground);
+}
+
+.reading-content h1 {
+  font-size: 40px;
+  margin-top: 2.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.reading-content h2 {
+  font-size: 30px;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.reading-content h3 {
+  font-size: 24px;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.reading-content blockquote {
+  border-left: 3px solid #18181b;
+  padding-left: 1.5rem;
+  font-style: italic;
+  margin: 1.5rem 0;
+  color: #52525b;
+}
+
+.reading-content pre {
+  background: #18181b;
+  color: #e4e4e7;
+  border-radius: 16px;
+  padding: 1.5rem;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.reading-content code {
+  font-family: var(--font-mono);
+  background: #f4f4f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.88em;
+}
+
+.reading-content pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.reading-content img {
+  border-radius: 16px;
+  margin: 2rem 0;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* === Scrollbar === */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1aa;
+}
+
+/* === Responsive Typography === */
+@media (max-width: 640px) {
+  .reading-content {
+    font-size: 18px;
+  }
+
+  .reading-content h1 {
+    font-size: 32px;
+  }
+}
+
+
+/* === Premium Effects === */
+.glass {
+  background: var(--background);
+  opacity: 0.95;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glow-border {
+  position: relative;
+}
+
+.glow-border::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background: linear-gradient(to right, transparent, var(--foreground), transparent);
+  opacity: 0.1;
+  z-index: -1;
+  border-radius: inherit;
+}
