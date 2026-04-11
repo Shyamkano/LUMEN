@@ -84,15 +84,18 @@ export async function getDraft(draftId: string) {
 export async function deleteDraft(draftId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) return { error: 'Access Denied: Draft cannot be removed without authentication.' };
 
   const { error } = await supabase
     .from('drafts')
     .delete()
-    .eq('id', draftId)
-    .eq('user_id', user.id);
+    .match({ id: draftId, user_id: user.id });
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('Delete error (draft):', error);
+    return { error: `Draft Removal Failed: ${error.message}` };
+  }
+
   revalidatePath('/dashboard');
   return { success: true };
 }

@@ -27,11 +27,11 @@ export function PostActions({ id, type, slug }: PostActionsProps) {
       if (type === 'post') {
         const result = await deletePost(id);
         if (result?.error) alert(result.error);
-        else router.refresh();
+        else window.location.reload();
       } else {
         const result = await deleteDraft(id);
         if (result?.error) alert(result.error);
-        else router.refresh();
+        else window.location.reload();
       }
     } catch (err) {
       alert('An error occurred.');

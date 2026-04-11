@@ -174,18 +174,23 @@ export async function updatePost(
 export async function deletePost(postId: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) return { error: 'Access Denied: You must be logged in to terminate an archive entry.' };
 
   const { error } = await supabase
     .from('posts')
     .delete()
-    .eq('id', postId)
-    .eq('author_id', user.id);
+    .match({ id: postId, author_id: user.id });
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('Delete error:', error);
+    return { error: `Deletion Protocol Failed: ${error.message}` };
+  }
 
+  // Force revalidation across the network
   revalidatePath('/');
+  revalidatePath('/feed');
   revalidatePath('/dashboard');
+  
   return { success: true };
 }
 

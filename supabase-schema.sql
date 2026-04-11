@@ -118,6 +118,15 @@ CREATE TABLE IF NOT EXISTS post_versions (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 11. Followers / Social Graph
+CREATE TABLE IF NOT EXISTS followers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  follower_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  following_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(follower_id, following_id)
+);
+
 -- ============= INDEXES =============
 CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
 CREATE INDEX IF NOT EXISTS idx_posts_type ON posts(type);
@@ -129,6 +138,8 @@ CREATE INDEX IF NOT EXISTS idx_likes_post ON likes(post_id);
 CREATE INDEX IF NOT EXISTS idx_drafts_user ON drafts(user_id);
 CREATE INDEX IF NOT EXISTS idx_code_snippets_post ON code_snippets(post_id);
 CREATE INDEX IF NOT EXISTS idx_audio_metadata_post ON audio_metadata(post_id);
+CREATE INDEX IF NOT EXISTS idx_followers_follower ON followers(follower_id);
+CREATE INDEX IF NOT EXISTS idx_followers_following ON followers(following_id);
 
 -- ============= RLS POLICIES =============
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -141,11 +152,17 @@ ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drafts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE followers ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
 CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- Followers
+CREATE POLICY "Followers are viewable by everyone" ON followers FOR SELECT USING (true);
+CREATE POLICY "Users can follow others" ON followers FOR INSERT WITH CHECK (auth.uid() = follower_id);
+CREATE POLICY "Users can unfollow" ON followers FOR DELETE USING (auth.uid() = follower_id);
 
 -- Posts
 CREATE POLICY "Published posts are viewable by everyone" ON posts FOR SELECT USING (status = 'published');
