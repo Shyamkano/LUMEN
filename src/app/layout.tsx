@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { Analytics } from "@vercel/analytics/next";
 
 
 
@@ -33,6 +34,7 @@ export default async function RootLayout({
           </main>
           <Footer />
         </QueryProvider>
+        <Analytics />
       </body>
     </html>
 
