@@ -88,29 +88,63 @@ export async function getFollowStats(userId: string) {
 
 export async function getFollowers(userId: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  
+  // 1. Get IDs of people following this user
+  const { data: followerRelations, error } = await supabase
     .from('followers')
-    .select('profiles!follower_id(*)')
+    .select('follower_id')
     .eq('following_id', userId);
     
-  if (error) {
-    console.error('Error fetching followers:', error);
+  if (error || !followerRelations) {
+    console.error('Error fetching follower IDs:', error);
     return [];
   }
-  return data?.map(d => d.profiles) || [];
+
+  const followerIds = followerRelations.map(r => r.follower_id);
+  if (followerIds.length === 0) return [];
+
+  // 2. Fetch the profiles for those IDs
+  const { data: profiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .in('id', followerIds);
+
+  if (profileError) {
+    console.error('Error fetching profiles for followers:', profileError);
+    return [];
+  }
+
+  return profiles || [];
 }
 
 export async function getFollowing(userId: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  
+  // 1. Get IDs of people this user is following
+  const { data: followingRelations, error } = await supabase
     .from('followers')
-    .select('profiles!following_id(*)')
+    .select('following_id')
     .eq('follower_id', userId);
 
-  if (error) {
-    console.error('Error fetching following:', error);
+  if (error || !followingRelations) {
+    console.error('Error fetching following IDs:', error);
     return [];
   }
-  return data?.map(d => d.profiles) || [];
+
+  const followingIds = followingRelations.map(r => r.following_id);
+  if (followingIds.length === 0) return [];
+
+  // 2. Fetch the profiles for those IDs
+  const { data: profiles, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .in('id', followingIds);
+
+  if (profileError) {
+    console.error('Error fetching profiles for following:', profileError);
+    return [];
+  }
+
+  return profiles || [];
 }
 

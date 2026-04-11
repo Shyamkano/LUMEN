@@ -27,7 +27,7 @@ export function PostActions({ id, type, slug }: PostActionsProps) {
       if (type === 'post') {
         const result = await deletePost(id);
         if (result?.error) alert(result.error);
-        else window.location.reload();
+        else router.push('/dashboard');
       } else {
         const result = await deleteDraft(id);
         if (result?.error) alert(result.error);
