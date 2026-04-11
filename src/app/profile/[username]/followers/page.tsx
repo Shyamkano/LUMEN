@@ -23,6 +23,7 @@ export default async function FollowersPage({ params }: { params: Promise<{ user
       users={followers} 
       title="Followers" 
       emptyMessage="No one has synchronized with this frequency yet." 
+      backUrl={`/profile/${decodedUsername}`}
     />
   );
 }

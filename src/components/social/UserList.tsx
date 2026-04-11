@@ -9,9 +9,10 @@ interface UserListProps {
   users: any[];
   title: string;
   emptyMessage: string;
+  backUrl?: string;
 }
 
-export function UserList({ users, title, emptyMessage }: UserListProps) {
+export function UserList({ users, title, emptyMessage, backUrl = ".." }: UserListProps) {
   return (
     <div className="max-w-2xl mx-auto py-20 animate-reveal px-6">
       <div className="flex flex-col gap-4 mb-20">
@@ -52,7 +53,7 @@ export function UserList({ users, title, emptyMessage }: UserListProps) {
       )}
       
       <div className="mt-20 pt-10 border-t border-border flex justify-center">
-         <Link href="..">
+         <Link href={backUrl}>
            <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground">
               ← Return to Identity
            </Button>

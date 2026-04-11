@@ -23,6 +23,7 @@ export default async function FollowingPage({ params }: { params: Promise<{ user
       users={following} 
       title="Following" 
       emptyMessage="This individual is not following any external signals." 
+      backUrl={`/profile/${decodedUsername}`}
     />
   );
 }
