@@ -185,6 +185,7 @@ export async function deletePost(postId: string) {
   if (error) return { error: error.message };
 
   revalidatePath('/');
+  revalidatePath('/dashboard');
   return { success: true };
 }
 

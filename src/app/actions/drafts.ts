@@ -93,5 +93,6 @@ export async function deleteDraft(draftId: string) {
     .eq('user_id', user.id);
 
   if (error) return { error: error.message };
+  revalidatePath('/dashboard');
   return { success: true };
 }
