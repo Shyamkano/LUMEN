@@ -54,6 +54,24 @@ export default function NewPostPage() {
   const [existingPostId, setExistingPostId] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
+  const [authorProfile, setAuthorProfile] = useState<any>(null);
+  const [shadowIdentity, setShadowIdentity] = useState<any>(null);
+
+  // Fetch Author Identity
+  useEffect(() => {
+    async function fetchIdentity() {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+        const { data: anon } = await supabase.from('anonymous_identities').select('*').eq('user_id', user.id).single();
+        setAuthorProfile(profile);
+        setShadowIdentity(anon);
+      }
+    }
+    fetchIdentity();
+  }, []);
 
   const handleAddTag = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -249,12 +267,24 @@ export default function NewPostPage() {
 
   return (
     <div className="max-w-screen-xl mx-auto px-6 py-8 animate-fade-in bg-background">
-      {/* Top bar */}
-      <div className="flex items-center justify-between mb-12">
+      {/* Top bar - Hardened Visibility & Layout Sync */}
+      <div className="flex items-center justify-between mb-16 sticky top-20 bg-background/95 backdrop-blur-md z-30 pt-6 pb-6 border-b border-border/10">
         <div className="flex items-center gap-6">
           <Link href="/feed" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
             ← Back
           </Link>
+
+          {/* Identity Signal */}
+          <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-border">
+            <div className={`w-2 h-2 rounded-full ${isAnonymous ? 'bg-black animate-pulse' : 'bg-emerald-500'}`} />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+              Tracing: <span className="text-foreground">
+                {isAnonymous 
+                  ? (shadowIdentity?.alias_name || 'Incognito') 
+                  : (authorProfile?.full_name || authorProfile?.username || 'Resident')}
+              </span>
+            </span>
+          </div>
 
           {/* Type selector */}
           <div className="relative">

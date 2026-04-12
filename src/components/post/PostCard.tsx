@@ -49,11 +49,13 @@ export function PostCard({ post }: { post: Post }) {
             </div>
             <div className="flex flex-col z-10 relative">
               <span 
-                className={`text-sm font-bold text-foreground ${!post.is_anonymous && post.profile?.username ? 'hover:underline cursor-pointer transition-colors' : ''}`}
+                className={`text-sm font-bold text-foreground hover:underline cursor-pointer transition-colors`}
                 onClick={(e) => {
-                  if (!post.is_anonymous && post.profile?.username) {
-                    e.preventDefault();
-                    e.stopPropagation();
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (post.is_anonymous && post.anonymous_identity?.alias_name) {
+                    router.push(`/alias/${encodeURIComponent(post.anonymous_identity.alias_name)}`);
+                  } else if (!post.is_anonymous && post.profile?.username) {
                     router.push(`/profile/${post.profile.username}`);
                   }
                 }}

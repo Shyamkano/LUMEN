@@ -29,12 +29,16 @@ export async function getComments(postId: string) {
   const anonMap = new Map((anonIdentities || []).map(a => [a.id, a]));
 
   // Build tree
-  const enriched = comments.map(c => ({
-    ...c,
-    profile: c.user_id ? (profileMap.get(c.user_id) || null) : null,
-    anonymous_identity: c.anon_id ? (anonMap.get(c.anon_id) || null) : null,
-    replies: [] as typeof comments,
-  }));
+  const enriched = comments.map(c => {
+    const isAnon = !!c.anon_id;
+    return {
+      ...c,
+      user_id: isAnon ? 'HIDDEN' : c.user_id, // Safety lock
+      profile: isAnon ? null : (profileMap.get(c.user_id) || null),
+      anonymous_identity: c.anon_id ? (anonMap.get(c.anon_id) || null) : null,
+      replies: [] as any[],
+    };
+  });
 
   const topLevel = enriched.filter(c => !c.parent_id);
   const replies = enriched.filter(c => c.parent_id);
@@ -50,22 +54,33 @@ export async function getComments(postId: string) {
   return topLevel;
 }
 
-export async function addComment(postId: string, content: string, parentId?: string | null) {
+export async function addComment(postId: string, content: string, parentId?: string | null, isAnonymous: boolean = false) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return { error: 'You must be logged in to comment.' };
+  if (!user) return { error: 'Authentication required for dialogue participation.' };
+
+  let anonId = null;
+  if (isAnonymous) {
+    const { data: identity } = await supabase
+      .from('anonymous_identities')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    anonId = identity?.id;
+  }
 
   const { error } = await supabase.from('comments').insert([{
     post_id: postId,
     user_id: user.id,
+    anon_id: anonId,
     content,
     parent_id: parentId || null,
   }]);
 
   if (error) return { error: error.message };
 
-  revalidatePath('/');
+  revalidatePath('/', 'layout');
   return { success: true };
 }
 

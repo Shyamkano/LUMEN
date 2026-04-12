@@ -1,4 +1,4 @@
-import { getPosts } from '@/app/actions/posts';
+import { getPosts, getTrendingPosts } from '@/app/actions/posts';
 import { FeedList } from '@/components/feed/FeedList';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
@@ -6,13 +6,16 @@ import { PenTool, Zap, Code, Mic, TrendingUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { Post } from '@/types';
 
+import { UserSearchWidget } from '@/components/social/UserSearchWidget';
+
+export const dynamic = 'force-dynamic';
+
 export default async function FeedPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Fetch recent posts for the sidebar trending widget
-  const recentPosts = await getPosts(undefined);
-  const trendingList = recentPosts.slice(0, 4);
+  // Fetch true trending posts based on engagement
+  const trendingList = await getTrendingPosts();
 
   return (
     <div className="max-w-7xl mx-auto px-6 relative">
@@ -58,6 +61,9 @@ export default async function FeedPage() {
             </div>
           )}
 
+          {/* User Search Widget */}
+          <UserSearchWidget />
+
           {/* Trending Posts Widget */}
           <div className="space-y-8">
             <div className="flex items-center gap-3 px-2">
@@ -72,14 +78,14 @@ export default async function FeedPage() {
                     <div className="w-6 h-6 rounded-full bg-foreground text-background flex items-center justify-center text-[10px] font-black">
                       {(post.profile?.full_name || post.anonymous_identity?.alias_name || 'U').charAt(0).toUpperCase()}
                     </div>
-                    {post.profile?.username ? (
-                      <Link href={`/profile/${post.profile.username}`} className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors">
-                        {post.profile?.full_name || 'User'}
+                    {post.is_anonymous ? (
+                      <Link href={`/alias/${encodeURIComponent(post.anonymous_identity?.alias_name || '')}`} className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors hover:underline">
+                        {post.anonymous_identity?.alias_name || 'Anonymous'}
                       </Link>
                     ) : (
-                      <span className="text-xs font-bold text-muted-foreground">
-                        {post.profile?.full_name || post.anonymous_identity?.alias_name || 'Anonymous'}
-                      </span>
+                      <Link href={`/profile/${post.profile?.username}`} className="text-xs font-bold text-muted-foreground hover:text-foreground transition-colors hover:underline">
+                        {post.profile?.full_name || 'User'}
+                      </Link>
                     )}
                   </div>
                   <Link href={`/post/${post.slug}`}>

@@ -33,11 +33,13 @@ export function CommentSection({ postId, initialCount }: CommentSectionProps) {
     }
   }, [isOpen, postId]);
 
+  const [isAnonymous, setIsAnonymous] = useState(false);
+
   const handleSubmit = async () => {
     if (!newComment.trim()) return;
     setSubmitting(true);
 
-    const result = await addComment(postId, newComment, replyTo);
+    const result = await addComment(postId, newComment, replyTo, isAnonymous);
     if (!result.error) {
       setNewComment('');
       setReplyTo(null);
@@ -59,15 +61,23 @@ export function CommentSection({ postId, initialCount }: CommentSectionProps) {
       || comment.profile?.full_name
       || 'User';
 
+    const profileLink = comment.anonymous_identity 
+      ? `/alias/${encodeURIComponent(comment.anonymous_identity.alias_name)}`
+      : `/profile/${comment.profile?.username || ''}`;
+
     return (
       <div className={`${depth > 0 ? 'ml-8 pl-6 border-l border-border' : ''}`}>
         <div className="py-6 group animate-reveal">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full bg-muted/10 border border-border flex items-center justify-center text-[10px] font-black text-foreground">
-              {authorName.charAt(0).toUpperCase()}
-            </div>
+            <Link href={profileLink} className="shrink-0">
+              <div className="w-8 h-8 rounded-full bg-muted/10 border border-border flex items-center justify-center text-[10px] font-black text-foreground hover:bg-foreground hover:text-background transition-colors">
+                {authorName.charAt(0).toUpperCase()}
+              </div>
+            </Link>
             <div className="flex flex-col">
-              <span className="text-sm font-black text-foreground uppercase tracking-wider">{authorName}</span>
+              <Link href={profileLink} className="text-sm font-black text-foreground uppercase tracking-wider hover:underline underline-offset-4 decoration-2">
+                {authorName}
+              </Link>
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
               </span>
@@ -133,14 +143,28 @@ export function CommentSection({ postId, initialCount }: CommentSectionProps) {
                 rows={4}
                 className="w-full p-6 rounded-2xl border border-border text-sm font-medium focus:outline-none focus:border-foreground resize-none bg-muted/5 placeholder:text-muted-foreground/60 transition-all leading-relaxed"
               />
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center bg-muted/5 p-4 rounded-xl border border-border">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div className={`w-10 h-6 rounded-full p-1 transition-all flex items-center ${isAnonymous ? 'bg-foreground' : 'bg-muted border border-border'}`}>
+                    <input 
+                      type="checkbox" 
+                      className="hidden" 
+                      checked={isAnonymous} 
+                      onChange={() => setIsAnonymous(!isAnonymous)} 
+                    />
+                    <div className={`w-4 h-4 rounded-full bg-white transition-all ${isAnonymous ? 'translate-x-4' : 'translate-x-0'}`} />
+                  </div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground group-hover:text-foreground transition-colors">
+                    Participate as Shadow
+                  </span>
+                </label>
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting || !newComment.trim()}
                   className="rounded-full h-12 px-8 font-black uppercase tracking-widest text-[10px]"
                 >
                   <Send size={14} strokeWidth={3} />
-                  {submitting ? 'Syncing...' : 'Dispatch'}
+                  {submitting ? 'Syncing...' : 'Dispatch Signal'}
                 </Button>
               </div>
             </div>

@@ -11,7 +11,8 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import { User, FileText, Code, Mic, Zap, Ghost } from 'lucide-react';
 import { PostActions } from '@/components/post/PostActions';
-import { PostActions as AdminActions } from '@/components/dashboard/PostActions';
+import { PostActions as AuthorActions } from '@/components/dashboard/PostActions';
+import { PostAdminActions } from '@/components/admin/PostAdminActions';
 import { CommentSection } from '@/components/comments/CommentSection';
 import Link from 'next/link';
 
@@ -68,7 +69,12 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const { data: currentUserProfile } = user 
+    ? await supabase.from('profiles').select('role').eq('id', user.id).single()
+    : { data: null };
+
   const isOwnPost = user?.id === post.author_id;
+  const isAdmin = currentUserProfile?.role === 'admin';
 
   // Render TipTap content to HTML
   let html = '';
@@ -120,12 +126,24 @@ export default async function PostPage({ params }: PostPageProps) {
               </span>
             </div>
 
-            {isOwnPost && (
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-2">Management</span>
-                <AdminActions id={post.id} type="post" slug={post.slug} />
-              </div>
-            )}
+            <div className="flex items-center gap-4">
+              {isAdmin && (
+                <div className="flex items-center gap-2 pr-4 border-r border-border">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Admin Controls</span>
+                  <PostAdminActions 
+                    postId={post.id} 
+                    postTitle={post.title} 
+                    isPublished={post.status === 'published'} 
+                  />
+                </div>
+              )}
+              {isOwnPost && (
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-2">Management</span>
+                  <AuthorActions id={post.id} type="post" slug={post.slug} />
+                </div>
+              )}
+            </div>
           </div>
 
 
@@ -135,37 +153,35 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Premium Author Row */}
           <div className="flex items-center gap-6 py-10 mb-16 border-y border-border">
-            {!post.is_anonymous && post.profile?.username ? (
-              <Link href={`/profile/${post.profile.username}`} className="relative group/avatar">
+            {post.is_anonymous ? (
+              <Link href={`/alias/${encodeURIComponent(post.anonymous_identity?.alias_name || '')}`} className="shrink-0">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-foreground text-background hover:scale-105 transition-transform shadow-lg shadow-foreground/5">
+                  ?
+                </div>
+              </Link>
+            ) : (
+              <Link href={`/profile/${post.profile?.username || ''}`} className="shrink-0 group/avatar relative">
                 <div className="absolute -inset-1 bg-foreground rounded-full opacity-0 group-hover/avatar:opacity-10 transition-opacity" />
-                <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-muted/10 text-foreground`}>
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-muted/10 text-foreground hover:scale-105 transition-transform">
                   {post.profile?.avatar_url
                     ? <img src={post.profile.avatar_url} alt={authorName} className="w-full h-full object-cover" />
                     : <span className="text-xl font-black">{authorName.charAt(0).toUpperCase()}</span>
                   }
                 </div>
               </Link>
-            ) : (
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border ${post.is_anonymous
-                ? 'bg-foreground text-background'
-                : 'bg-muted/10 text-foreground'
-                }`}>
-                {post.is_anonymous ? '?' : (
-                  <span className="text-xl font-black">{authorName.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
             )}
-
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-4 mb-1">
-                {!post.is_anonymous && post.profile?.username ? (
-                  <Link href={`/profile/${post.profile.username}`} className="text-lg font-black text-foreground hover:underline underline-offset-4">
-                    {authorName}
-                  </Link>
-                ) : (
-                  <span className="text-lg font-black text-foreground">{authorName}</span>
-                )}
+                <Link 
+                  href={post.is_anonymous 
+                    ? `/alias/${encodeURIComponent(post.anonymous_identity?.alias_name || '')}` 
+                    : `/profile/${post.profile?.username || ''}`
+                  } 
+                  className="text-lg font-black text-foreground hover:underline underline-offset-4"
+                >
+                  {authorName}
+                </Link>
 
                 {!post.is_anonymous && !isOwnPost && post.author_id && (
                   <FollowButton followingId={post.author_id} className="rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest" />

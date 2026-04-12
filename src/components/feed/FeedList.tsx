@@ -8,7 +8,7 @@ import type { PostType, Post } from '@/types';
 import { Loader2 } from 'lucide-react';
 
 export function FeedList() {
-  const [activeType, setActiveType] = useState<PostType | undefined>(undefined);
+  const [activeType, setActiveType] = useState<PostType | 'discovery' | 'shadows' | undefined>(undefined);
   const { data: posts, isLoading, error } = usePosts(activeType);
 
   return (

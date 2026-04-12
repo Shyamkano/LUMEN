@@ -11,6 +11,11 @@ import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import { EditorToolbar } from './EditorToolbar';
 import { useCallback, useEffect, useRef } from 'react';
+import Mention from '@tiptap/extension-mention';
+import { ReactRenderer } from '@tiptap/react';
+import tippy from 'tippy.js';
+import { searchUsers } from '@/app/actions/profiles';
+import { SuggestionList } from './SuggestionList';
 
 const lowlight = createLowlight(common);
 
@@ -39,6 +44,10 @@ export function TipTapEditor({
     extensions: [
       StarterKit.configure({
         codeBlock: false,
+        // @ts-ignore - explicitly trying to disable if present in this modified StarterKit
+        link: false,
+        // @ts-ignore
+        underline: false,
       }),
       Placeholder.configure({ placeholder }),
       LinkExt.configure({ 
@@ -49,6 +58,71 @@ export function TipTapEditor({
       Image,
       Underline,
       CodeBlockLowlight.configure({ lowlight }),
+      Mention.configure({
+        HTMLAttributes: {
+          class: 'mention bg-zinc-100 text-black px-1.5 py-0.5 rounded-md font-bold decoration-none border border-black/5',
+        },
+        suggestion: {
+          items: async ({ query }) => {
+            if (!query || query.length < 1) return []; // Turbo Search: Don't search for nothing
+            return await searchUsers(query);
+          },
+          render: () => {
+            let component: any;
+            let popup: any;
+
+            return {
+              onStart: (props: any) => {
+                component = new ReactRenderer(SuggestionList, {
+                  props,
+                  editor: props.editor,
+                });
+
+                if (!props.clientRect) {
+                  return;
+                }
+
+                popup = tippy('body', {
+                  getReferenceClientRect: props.clientRect,
+                  appendTo: () => document.body,
+                  content: component.element,
+                  showOnCreate: true,
+                  interactive: true,
+                  trigger: 'manual',
+                  placement: 'bottom-start',
+                });
+              },
+
+              onUpdate(props: any) {
+                if (!component) return;
+                component.updateProps(props);
+
+                if (!props.clientRect) {
+                  return;
+                }
+
+                popup?.[0]?.setProps({
+                  getReferenceClientRect: props.clientRect,
+                });
+              },
+
+              onKeyDown(props: any) {
+                if (props.event.key === 'Escape') {
+                  popup?.[0]?.hide();
+                  return true;
+                }
+                // Hardened Guard
+                return component?.ref?.onKeyDown?.(props) || false;
+              },
+
+              onExit() {
+                popup?.[0]?.destroy();
+                component?.destroy();
+              },
+            };
+          },
+        },
+      }),
       ...(maxLength ? [CharacterCount.configure({ limit: maxLength })] : []),
     ],
     content: content || undefined,

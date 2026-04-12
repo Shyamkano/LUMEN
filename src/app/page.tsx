@@ -11,7 +11,7 @@ export default async function LandingPage() {
     <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto px-6 relative flex flex-col justify-center overflow-hidden">
       {/* Background Glows */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[40vh] bg-foreground/[0.02] blur-[100px] rounded-full pointer-events-none" />
-      
+
       <main className="relative z-10 animate-reveal flex flex-col items-start gap-4 py-4">
         <span className="text-[9px] font-black uppercase tracking-[0.5em] text-muted-foreground border border-border px-3 py-1 rounded-full shadow-sm">
           Luminous Network

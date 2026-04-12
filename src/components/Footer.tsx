@@ -58,7 +58,7 @@ export default function Footer() {
           {/* Action */}
           <div className="space-y-6 md:space-y-8">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-black">Control</h4>
-            <button 
+            <button
               onClick={scrollToTop}
               className="group flex items-center gap-3 text-xs font-black uppercase tracking-widest text-black"
             >

@@ -5,30 +5,45 @@ import { createClient } from '@/lib/supabase/client';
 import type { PostType } from '@/types';
 
 // Fetch posts client-side (for SPA-style feed)
-async function fetchPosts(type?: PostType) {
+async function fetchPosts(type?: PostType | 'discovery' | 'shadows') {
   const supabase = createClient();
   let query = supabase
     .from('posts')
     .select('*')
     .eq('status', 'published')
-    .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(80);
 
-  if (type) {
+  if (type === 'shadows') {
+    query = query.eq('is_anonymous', true);
+  } else if (type && type !== 'discovery') {
     query = query.eq('type', type);
   }
 
   const { data: posts, error } = await query;
   if (error || !posts) return [];
 
-  // Fetch related data
-  const authorIds = [...new Set(posts.filter(p => !p.is_anonymous).map(p => p.author_id))];
+  // If discovery or shadows, shuffle them locally
+  let finalPosts = [...posts];
+  if (type === 'discovery' || type === 'shadows') {
+    finalPosts = finalPosts.sort(() => Math.random() - 0.5);
+  } else {
+    finalPosts = finalPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }
+
+  // Fetch profiles and related data for truncated set
+  const visiblePosts = finalPosts.slice(0, 50);
+  const authorIds = [...new Set(visiblePosts.map(p => p.author_id))];
+  
   const { data: profiles } = authorIds.length > 0
     ? await supabase.from('profiles').select('*').in('id', authorIds)
     : { data: [] };
   const profileMap = new Map((profiles || []).map((p: Record<string, unknown>) => [p.id, p]));
 
-  const postIds = posts.map(p => p.id);
+  // Fetch anonymous identities
+  const { data: anonIdentities } = await supabase.from('anonymous_identities').select('*').in('user_id', authorIds);
+  const anonMap = new Map((anonIdentities || []).map((a: Record<string, unknown>) => [a.user_id, a]));
+
+  const postIds = visiblePosts.map(p => p.id);
   const { data: likesData } = await supabase.from('likes').select('post_id').in('post_id', postIds);
   const likesCount: Record<string, number> = {};
   (likesData || []).forEach((l: { post_id: string }) => {
@@ -41,15 +56,16 @@ async function fetchPosts(type?: PostType) {
     commentsCount[c.post_id] = (commentsCount[c.post_id] || 0) + 1;
   });
 
-  return posts.map(post => ({
+  return visiblePosts.map(post => ({
     ...post,
     profile: post.is_anonymous ? null : (profileMap.get(post.author_id) || null),
+    anonymous_identity: post.is_anonymous ? (anonMap.get(post.author_id) || null) : null,
     likes_count: likesCount[post.id] || 0,
     comments_count: commentsCount[post.id] || 0,
   }));
 }
 
-export function usePosts(type?: PostType) {
+export function usePosts(type?: PostType | 'discovery' | 'shadows') {
   return useQuery({
     queryKey: ['posts', type || 'all'],
     queryFn: () => fetchPosts(type),

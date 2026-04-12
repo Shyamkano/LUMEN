@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import type { PostType } from '@/types';
-import { FileText, Zap, Code, Mic, Layers } from 'lucide-react';
+import { FileText, Zap, Code, Mic, Layers, EyeOff } from 'lucide-react';
 
 const FILTERS = [
-  { type: undefined, label: 'All Posts', icon: Layers },
+  { type: undefined, label: 'Latest', icon: Layers },
+  { type: 'discovery' as const, label: 'Discover', icon: Zap },
+  { type: 'shadows' as const, label: 'Shadows', icon: EyeOff },
   { type: 'blog' as PostType, label: 'Blogs', icon: FileText },
   { type: 'micro' as PostType, label: 'Micro', icon: Zap },
   { type: 'code' as PostType, label: 'Code', icon: Code },
@@ -13,8 +15,8 @@ const FILTERS = [
 ];
 
 interface FeedFilterProps {
-  activeType?: PostType;
-  onChange: (type?: PostType) => void;
+  activeType?: PostType | 'discovery' | 'shadows';
+  onChange: (type?: PostType | 'discovery' | 'shadows') => void;
 }
 
 export function FeedFilter({ activeType, onChange }: FeedFilterProps) {

@@ -8,6 +8,8 @@ import { format } from 'date-fns';
 import { FollowButton } from '@/components/social/FollowButton';
 import { getFollowStats } from '@/app/actions/social';
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const resolvedParams = await params;
   const supabase = await createClient();
@@ -27,13 +29,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     notFound();
   }
 
-  // Fetch posts by this user
-  const { data: posts } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('author_id', profile.id)
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
+  // Fetch posts by this user (using the action for consistent privacy rules)
+  const { getPostsByUsername } = await import('@/app/actions/posts');
+  const { posts } = await getPostsByUsername(username);
 
   const isOwnProfile = currentUser?.id === profile.id;
 
