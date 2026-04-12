@@ -21,7 +21,7 @@ export function PostCard({ post }: { post: Post }) {
 
   const config = TYPE_CONFIG[post.type] || TYPE_CONFIG.blog;
   const TypeIcon = config.icon;
-  const excerpt = createExcerpt(post.content as Record<string, unknown>, 180);
+  const excerpt = createExcerpt(post.content as Record<string, unknown>, 140); // Slightly shorter excerpt
 
   const authorName = post.is_anonymous
     ? (post.anonymous_identity?.alias_name || 'Anonymous')
@@ -30,39 +30,44 @@ export function PostCard({ post }: { post: Post }) {
   const authorInitial = authorName.charAt(0).toUpperCase();
 
   return (
-    <Link href={`/post/${post.slug}`} className="block group">
-      <article className="relative p-8 md:p-10 rounded-[2.5rem] border border-border bg-card/50 backdrop-blur-sm hover:border-foreground/30 hover:bg-card hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)] transition-all duration-700 group-hover:-translate-y-1">
+    <Link href={`/post/${post.slug}`} className="block group h-full">
+      <article className="relative h-full flex flex-col p-6 rounded-3xl border border-border bg-card/50 backdrop-blur-sm hover:border-foreground/30 hover:bg-card hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] transition-all duration-500 group-hover:-translate-y-1">
 
         {/* Author row */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-xs font-black border border-border ${
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2.5">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-black border border-border overflow-hidden ${
               post.is_anonymous
                 ? 'bg-foreground text-background'
                 : 'bg-muted/10 text-foreground'
             }`}>
               {post.is_anonymous ? '?' : (
                 post.profile?.avatar_url
-                  ? <img src={post.profile.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                  ? <img src={post.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   : authorInitial
               )}
             </div>
             <div className="flex flex-col z-10 relative">
-              <span 
-                className={`text-sm font-bold text-foreground hover:underline cursor-pointer transition-colors`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (post.is_anonymous && post.anonymous_identity?.alias_name) {
-                    router.push(`/alias/${encodeURIComponent(post.anonymous_identity.alias_name)}`);
-                  } else if (!post.is_anonymous && post.profile?.username) {
-                    router.push(`/profile/${post.profile.username}`);
-                  }
-                }}
-              >
-                {authorName}
-              </span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">
+              <div className="flex items-center gap-1.5">
+                <span 
+                  className="text-[11px] font-black text-foreground hover:underline cursor-pointer transition-colors max-w-[80px] truncate"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (post.is_anonymous && post.anonymous_identity?.alias_name) {
+                      router.push(`/alias/${encodeURIComponent(post.anonymous_identity.alias_name)}`);
+                    } else if (!post.is_anonymous && post.profile?.username) {
+                      router.push(`/profile/${post.profile.username}`);
+                    }
+                  }}
+                >
+                  {authorName}
+                </span>
+                {post.is_anonymous && (
+                  <User size={10} className="text-muted-foreground opacity-50" />
+                )}
+              </div>
+              <span className="text-[8px] uppercase tracking-widest text-muted-foreground font-bold">
                 {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
               </span>
             </div>
@@ -70,70 +75,70 @@ export function PostCard({ post }: { post: Post }) {
 
           {!post.is_anonymous && post.profile?.id && (
             <div className="z-10 relative" onClick={(e) => e.stopPropagation()}>
-              <FollowButton followingId={post.profile.id} showCount={false} className="py-1.5 px-4 text-[10px] font-black uppercase tracking-widest rounded-full border-border hover:bg-foreground hover:text-background" />
+              <FollowButton followingId={post.profile.id} showCount={false} className="h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full border-border hover:bg-foreground hover:text-background" />
             </div>
           )}
         </div>
 
         {/* Content Section */}
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="flex-1 space-y-4 min-w-0">
-            {!(post.type === 'micro' && post.title.startsWith('Post ')) && (
-              <h2 className="text-2xl md:text-3xl font-black text-foreground leading-[1.1] tracking-tighter group-hover:underline underline-offset-4 decoration-1">
-                {post.title}
-              </h2>
-            )}
-
-            {(post.type === 'blog' || post.type === 'code' || post.type === 'audio') && excerpt && (
-              <p className="text-muted-foreground text-base leading-relaxed line-clamp-3 font-medium">
-                {excerpt}
-              </p>
-            )}
-
-            {post.type === 'micro' && excerpt && (
-              <p className="text-foreground text-xl font-medium leading-relaxed tracking-tight line-clamp-4 italic border-l-2 border-border pl-4">
-                {excerpt}
-              </p>
-            )}
-          </div>
-
+        <div className="flex-1 space-y-3 min-w-0">
           {post.cover_image && (
-            <div className="w-full md:w-40 lg:w-48 aspect-[4/3] md:aspect-square overflow-hidden rounded-2xl border border-border flex-shrink-0 transition-all duration-700 group-hover:scale-[1.02]">
+            <div className="w-full aspect-[16/9] overflow-hidden rounded-2xl border border-border mb-4 transition-all duration-500 group-hover:scale-[1.01]">
               <img 
                 src={post.cover_image} 
                 alt={post.title} 
-                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
               />
             </div>
           )}
 
+          {!(post.type === 'micro' && post.title.startsWith('Post ')) && (
+            <h2 className="text-xl font-black text-foreground leading-[1.2] tracking-tight group-hover:underline underline-offset-2 decoration-1 line-clamp-2">
+              {post.title}
+            </h2>
+          )}
+
+          {excerpt && (
+            <p className="text-muted-foreground text-xs leading-relaxed line-clamp-3 font-medium opacity-80">
+              {excerpt}
+            </p>
+          )}
+
+          {/* Tags display */}
+          {post.tags && post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {post.tags.slice(0, 3).map(tag => (
+                <span key={tag} className="text-[8px] font-black uppercase tracking-widest text-muted-foreground/50 border border-border/40 px-1.5 py-0.5 rounded-md">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-border/50">
-          <div className="flex items-center gap-4">
-            <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border ${config.color} transition-colors`}>
+        <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/30">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
               <TypeIcon size={12} strokeWidth={3} />
               {config.label}
             </span>
-            {post.read_time && post.type === 'blog' && (
-              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{post.read_time} min read</span>
-            )}
           </div>
 
-          <div className="flex items-center gap-5 text-muted-foreground">
-            <span className="flex items-center gap-1.5 text-xs font-bold hover:text-foreground transition-colors">
-              <Heart size={16} />
+          <div className="flex items-center gap-4 text-muted-foreground/60">
+            <span className="flex items-center gap-1 text-[10px] font-black">
+              <Heart size={14} className="group-hover:text-red-500 transition-colors" />
               {post.likes_count || 0}
             </span>
-            <span className="flex items-center gap-1.5 text-xs font-bold hover:text-foreground transition-colors">
-              <MessageCircle size={16} />
+            <span className="flex items-center gap-1 text-[10px] font-black">
+              <MessageCircle size={14} className="group-hover:text-blue-500 transition-colors" />
               {post.comments_count || 0}
             </span>
           </div>
         </div>
       </article>
     </Link>
-
   );
 }
+
+

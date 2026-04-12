@@ -3,34 +3,61 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 import { logout } from '@/app/auth/actions';
-import { PenTool, User, LogOut, ChevronDown, Settings, Search, Layers } from 'lucide-react';
+import { PenTool, User, LogOut, ChevronDown, Settings, Search, Layers, Bookmark, FileText } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { getSearchSuggestions } from '@/app/actions/profiles';
 
 export default function Navbar({ user }: { user: SupabaseUser | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ users: any[], posts: any[] }>({ users: [], posts: [] });
+  const [searchQuery, setSearchQuery] = useState('');
+  
   const menuRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+
+  // Suggestions logic
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (searchQuery.length > 1) {
+        const results = await getSearchSuggestions(searchQuery);
+        setSuggestions(results);
+        setSearchOpen(true);
+      } else {
+        setSuggestions({ users: [], posts: [] });
+        setSearchOpen(false);
+      }
+    };
+
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
+        setSearchOpen(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const router = useRouter();
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchOpen(false);
     }
   };
+
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-border h-20 flex items-center px-6 transition-none">
@@ -67,16 +94,62 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
 
         {/* Global Search */}
-        <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-2xl relative">
-          <Search size={18} className="absolute left-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search moments, guides, logs..."
-            className="w-full bg-muted/50 border border-border rounded-xl h-11 pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-black transition-all text-black placeholder:text-muted-foreground/60 shadow-sm"
-          />
-        </form>
+        <div ref={searchRef} className="hidden md:flex flex-1 max-w-2xl relative">
+          <form onSubmit={handleSearch} className="w-full relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => searchQuery.length > 1 && setSearchOpen(true)}
+              placeholder="Search narratives, residents, tags..."
+              className="w-full bg-muted/50 border border-border rounded-xl h-11 pl-12 pr-4 text-sm font-medium focus:outline-none focus:border-black transition-all text-black placeholder:text-muted-foreground/60 shadow-sm"
+            />
+          </form>
+
+          {/* Suggestions Dropdown */}
+          {searchOpen && (suggestions.users.length > 0 || suggestions.posts.length > 0) && (
+            <div className="absolute top-14 left-0 right-0 bg-white border border-border rounded-2xl shadow-2xl overflow-hidden py-4 animate-reveal">
+              {suggestions.users.length > 0 && (
+                <div className="mb-4">
+                  <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Residents</p>
+                  {suggestions.users.map(u => (
+                    <Link 
+                      key={u.id} 
+                      href={`/profile/${u.username}`}
+                      onClick={() => setSearchOpen(false)}
+                      className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black overflow-hidden">
+                        {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : u.username.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-bold text-foreground group-hover:underline">{u.full_name || u.username}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground opacity-50 uppercase tracking-widest">@{u.username}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+              {suggestions.posts.length > 0 && (
+                <div>
+                  <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Narratives</p>
+                  {suggestions.posts.map(p => (
+                    <Link 
+                      key={p.id} 
+                      href={`/post/${p.slug}`}
+                      onClick={() => setSearchOpen(false)}
+                      className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group"
+                    >
+                      <FileText size={16} className="text-muted-foreground shrink-0" />
+                      <span className="text-sm font-bold text-foreground group-hover:underline truncate">{p.title}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+
 
         <div className="flex items-center gap-6">
           {user ? (
@@ -121,6 +194,14 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                         onClick={() => setMenuOpen(false)}
                       >
                         <Layers size={18} /> Dashboard
+                      </Link>
+
+                      <Link
+                        href="/dashboard#collections"
+                        className="flex items-center gap-3 px-4 py-3 text-sm font-bold text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all"
+                        onClick={() => setMenuOpen(false)}
+                      >
+                        <Bookmark size={18} /> Collections
                       </Link>
 
                       <Link

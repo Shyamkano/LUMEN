@@ -125,12 +125,12 @@ export default async function DashboardPage() {
             </div>
 
             {posts && posts.length > 0 ? (
-              <div className="grid grid-cols-1 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {posts.map(post => (
                   <div key={post.id} className="relative group">
                     <PostCard post={{ ...post, profile: { full_name: 'You' } } as any} />
-                    <div className="absolute top-8 right-8 z-10 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
-                      <div className="bg-white/80 backdrop-blur-xl p-1 rounded-full shadow-2xl border border-border">
+                    <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100">
+                      <div className="bg-white/90 backdrop-blur-xl p-1 rounded-full shadow-xl border border-border">
                         <PostActions id={post.id} type="post" slug={post.slug} />
                       </div>
                     </div>
@@ -138,35 +138,38 @@ export default async function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center border border-dashed border-border rounded-[2rem]">
+              <div className="py-20 text-center border border-dashed border-border rounded-[3rem]">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">The broadcast history is empty.</p>
               </div>
             )}
+
           </section>
 
-          {/* Bookmarks Section */}
-          <section className="space-y-10">
+          {/* Digital Collections Section */}
+          <section id="collections" className="space-y-10 scroll-mt-24">
             <div className="flex items-center justify-between border-b border-border pb-6">
               <div className="flex items-center gap-4">
                 <Bookmark size={24} strokeWidth={2.5} />
-                <h2 className="text-2xl font-bold tracking-tighter uppercase">Archived Signal</h2>
+                <h2 className="text-2xl font-bold tracking-tighter uppercase">Digital Collections</h2>
               </div>
               <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted/10 px-3 py-1 rounded-md">
                 {bookmarks.length || 0} items
               </span>
             </div>
 
+
             {bookmarks.length > 0 ? (
-              <div className="grid grid-cols-1 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {bookmarks.map(post => (
                   <PostCard key={post.id} post={post as any} />
                 ))}
               </div>
             ) : (
-              <div className="py-20 text-center border border-dashed border-border rounded-[2rem]">
+              <div className="py-20 text-center border border-dashed border-border rounded-[3rem]">
                 <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">No signals preserved currently.</p>
               </div>
             )}
+
           </section>
 
         </div>

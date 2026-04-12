@@ -5,13 +5,17 @@ import { createClient } from '@/lib/supabase/client';
 import type { PostType } from '@/types';
 
 // Fetch posts client-side (for SPA-style feed)
-async function fetchPosts(type?: PostType | 'discovery' | 'shadows') {
+async function fetchPosts(type?: PostType | 'discovery' | 'shadows', tag?: string) {
   const supabase = createClient();
   let query = supabase
     .from('posts')
     .select('*')
     .eq('status', 'published')
     .limit(80);
+
+  if (tag) {
+    query = query.contains('tags', [tag]);
+  }
 
   if (type === 'shadows') {
     query = query.eq('is_anonymous', true);
@@ -37,11 +41,11 @@ async function fetchPosts(type?: PostType | 'discovery' | 'shadows') {
   const { data: profiles } = authorIds.length > 0
     ? await supabase.from('profiles').select('*').in('id', authorIds)
     : { data: [] };
-  const profileMap = new Map((profiles || []).map((p: Record<string, unknown>) => [p.id, p]));
+  const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
   // Fetch anonymous identities
   const { data: anonIdentities } = await supabase.from('anonymous_identities').select('*').in('user_id', authorIds);
-  const anonMap = new Map((anonIdentities || []).map((a: Record<string, unknown>) => [a.user_id, a]));
+  const anonMap = new Map((anonIdentities || []).map((a: any) => [a.user_id, a]));
 
   const postIds = visiblePosts.map(p => p.id);
   const { data: likesData } = await supabase.from('likes').select('post_id').in('post_id', postIds);
@@ -65,12 +69,13 @@ async function fetchPosts(type?: PostType | 'discovery' | 'shadows') {
   }));
 }
 
-export function usePosts(type?: PostType | 'discovery' | 'shadows') {
+export function usePosts(type?: PostType | 'discovery' | 'shadows', tag?: string) {
   return useQuery({
-    queryKey: ['posts', type || 'all'],
-    queryFn: () => fetchPosts(type),
+    queryKey: ['posts', type || 'all', tag || 'none'],
+    queryFn: () => fetchPosts(type, tag),
   });
 }
+
 
 // Like mutation
 export function useLikeMutation() {

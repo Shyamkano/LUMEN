@@ -103,8 +103,12 @@ export default function NewPostPage() {
     },
   });
 
-  // Load existing post or draft if ID provided in URL
+  // Load existing post or draft if ID provided in URL (ONCE only)
+  const hasLoadedRef = useRef(false);
   useEffect(() => {
+    if (hasLoadedRef.current) return;
+    hasLoadedRef.current = true; // Set IMMEDIATELY to prevent race conditions
+    
     const draftIdFromUrl = searchParams.get('draftId');
     const postIdFromUrl = searchParams.get('postId');
 
@@ -210,8 +214,9 @@ export default function NewPostPage() {
           // Clear local cache for all types
           ['blog', 'micro', 'code', 'audio'].forEach(t => localStorage.removeItem(`flow-draft-${t}`));
           
-          router.push('/dashboard');
+          router.push(`/post/${result.slug}`);
         }
+
 
       } else {
         // Create new
@@ -248,8 +253,9 @@ export default function NewPostPage() {
           // Clear local cache for all types
           ['blog', 'micro', 'code', 'audio'].forEach(t => localStorage.removeItem(`flow-draft-${t}`));
 
-          router.push('/dashboard');
+          router.push(`/post/${result.slug}`);
         }
+
 
       }
     } catch (err) {
@@ -416,7 +422,7 @@ export default function NewPostPage() {
                     }
                   }}
                   placeholder={isMicro ? "Optional title..." : "Post Title"}
-                  className="w-full text-5xl md:text-6xl font-extrabold placeholder:text-muted-foreground/30 outline-none border-none bg-transparent tracking-tighter text-foreground"
+                  className="w-full text-3xl md:text-4xl font-black placeholder:text-muted-foreground/20 outline-none border-none bg-transparent tracking-tight text-foreground"
                 />
                 
                 {/* Tags Input */}

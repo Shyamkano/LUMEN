@@ -4,20 +4,31 @@
 export function extractTextFromTipTap(content: Record<string, unknown> | null): string {
   if (!content) return '';
   
-  const extract = (node: Record<string, unknown>): string => {
+  // Standardize content to ensure no Proxies or hidden properties 
+  // interfere with server-side processing (Next.js 15+ safety)
+  let safeContent;
+  try {
+    safeContent = typeof content === 'string' ? JSON.parse(content) : JSON.parse(JSON.stringify(content));
+  } catch (e) {
+    return '';
+  }
+
+  const extract = (node: any): string => {
+    if (!node) return '';
+
     // Standard Text
     if (node.type === 'text' && typeof node.text === 'string') {
       return node.text;
     }
 
     // Mention Nodes (Critical for LUMEN interlinking)
-    if (node.type === 'mention' && node.attrs && (node.attrs as any).label) {
-      return `@${(node.attrs as any).label}`;
+    if (node.type === 'mention' && node.attrs && node.attrs.label) {
+      return `@${node.attrs.label}`;
     }
 
     // Handle nested content recursively
     if (Array.isArray(node.content)) {
-      return (node.content as Record<string, unknown>[])
+      return node.content
         .map(extract)
         .join(node.type === 'paragraph' ? '\n' : ' ');
     }
@@ -25,8 +36,9 @@ export function extractTextFromTipTap(content: Record<string, unknown> | null): 
     return '';
   };
   
-  return extract(content).trim();
+  return extract(safeContent).trim();
 }
+
 
 /**
  * Create a short excerpt from TipTap content

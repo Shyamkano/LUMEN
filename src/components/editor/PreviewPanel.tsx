@@ -5,11 +5,56 @@ import StarterKit from '@tiptap/starter-kit';
 import LinkExt from '@tiptap/extension-link';
 import ImageExt from '@tiptap/extension-image';
 import UnderlineExt from '@tiptap/extension-underline';
+import Mention from '@tiptap/extension-mention';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
+
+import { mergeAttributes } from '@tiptap/core';
+
 import type { PostType } from '@/types';
 
 const lowlight = createLowlight(common);
+
+// Override the node spec — must declare label in addAttributes for JSON round-trip
+const CustomMention = Mention.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      id: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-id'),
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.id) return {};
+          return { 'data-id': attributes.id };
+        },
+      },
+      label: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-label'),
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.label) return {};
+          return { 'data-label': attributes.label };
+        },
+      },
+    };
+  },
+  renderHTML({ node, HTMLAttributes }) {
+    const label = node.attrs.label;
+    const text = (!label || label === 'null') ? '@Resident' : `@${label}`;
+    
+    // Use the combined attributes but enforce the mention-tag class
+    const attrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+      class: 'mention-tag',
+    });
+    
+    return ['span', attrs, text];
+  },
+  renderText({ node }) {
+    const label = node.attrs.label;
+    if (!label || label === 'null') return '@Resident';
+    return `@${label}`;
+  },
+});
 
 const extensions = [
   StarterKit.configure({ codeBlock: false }),
@@ -20,7 +65,16 @@ const extensions = [
   ImageExt,
   UnderlineExt,
   CodeBlockLowlight.configure({ lowlight }),
+  CustomMention.configure({
+    HTMLAttributes: {
+      class: 'mention bg-zinc-100/50 text-foreground px-1.5 py-0.5 rounded-md font-bold border border-border/50',
+    },
+  }),
 ];
+
+
+
+
 
 interface PreviewPanelProps {
   title: string;
@@ -32,12 +86,27 @@ interface PreviewPanelProps {
 export function PreviewPanel({ title, content, type, codeSnippets = [] }: PreviewPanelProps) {
   let html = '';
   try {
-    if (content && content.type === 'doc') {
-      html = generateHTML(content, extensions);
+    if (content) {
+      let doc = content;
+      // Handle stringified JSON if necessary
+      if (typeof content === 'string') {
+        try {
+          doc = JSON.parse(content);
+        } catch {
+          // If it's just raw text, wrap it in a doc structure? 
+          // For now, let's stick to JSON
+        }
+      }
+      
+      if (typeof doc === 'object' && doc !== null && (doc as any).type === 'doc') {
+        html = generateHTML(doc as any, extensions);
+      }
     }
-  } catch {
-    html = '<p class="text-zinc-400 italic">Preview unavailable</p>';
+  } catch (err) {
+    console.error('Preview Generation Error:', err);
+    html = `<p class="text-zinc-400 italic">Preview temporary unavailable (Rendering sync in progress...)</p>`;
   }
+
 
   return (
     <div className="preview-panel bg-white rounded-2xl border border-zinc-100 overflow-hidden">

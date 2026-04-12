@@ -7,8 +7,10 @@ import StarterKit from '@tiptap/starter-kit';
 import LinkExtension from '@tiptap/extension-link';
 import ImageExtension from '@tiptap/extension-image';
 import UnderlineExtension from '@tiptap/extension-underline';
+import Mention from '@tiptap/extension-mention';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
+
 import { User, FileText, Code, Mic, Zap, Ghost } from 'lucide-react';
 import { PostActions } from '@/components/post/PostActions';
 import { PostActions as AuthorActions } from '@/components/dashboard/PostActions';
@@ -21,7 +23,54 @@ import { createClient } from '@/lib/supabase/server';
 import { AudioPlayer } from '@/components/audio/AudioPlayer';
 import type { Metadata } from 'next';
 
+import { mergeAttributes } from '@tiptap/core';
+
 const lowlight = createLowlight(common);
+
+// Override the node spec — must declare label in addAttributes for JSON round-trip
+const CustomMention = Mention.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      id: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-id'),
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.id) return {};
+          return { 'data-id': attributes.id };
+        },
+      },
+      label: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-label'),
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.label) return {};
+          return { 'data-label': attributes.label };
+        },
+      },
+    };
+  },
+  renderHTML({ node, HTMLAttributes }) {
+    const label = node.attrs.label;
+    const text = (!label || label === 'null') ? '@Resident' : `@${label}`;
+    const username = label && label !== 'null' ? label : null;
+    
+    // Combine attributes with the essential mention-tag class
+    const attrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+      class: 'mention-tag',
+    });
+    
+    if (username) {
+      return ['a', { ...attrs, href: `/profile/${username}` }, text];
+    }
+    return ['span', attrs, text];
+  },
+  renderText({ node }) {
+    const label = node.attrs.label;
+    if (!label || label === 'null') return '@Resident';
+    return `@${label}`;
+  },
+});
 
 const tiptapExtensions = [
   StarterKit.configure({
@@ -43,7 +92,15 @@ const tiptapExtensions = [
   }),
   UnderlineExtension,
   CodeBlockLowlight.configure({ lowlight }),
+  CustomMention.configure({
+    HTMLAttributes: {
+      class: 'mention bg-zinc-100/50 text-foreground px-1.5 py-0.5 rounded-md font-bold border border-border/50 hover:underline decoration-2 underline-offset-4 transition-all',
+    },
+  }),
 ];
+
+
+
 
 
 interface PostPageProps {
@@ -79,12 +136,20 @@ export default async function PostPage({ params }: PostPageProps) {
   // Render TipTap content to HTML
   let html = '';
   try {
-    if (post.content && post.content.type === 'doc') {
-      html = generateHTML(post.content, tiptapExtensions);
+    if (post.content) {
+      const contentObj = typeof post.content === 'string' 
+        ? JSON.parse(post.content) 
+        : post.content;
+        
+      if (contentObj && contentObj.type === 'doc') {
+        html = generateHTML(contentObj, tiptapExtensions);
+      }
     }
-  } catch {
+  } catch (e) {
+    console.error('HTML Generation Error:', e);
     html = '';
   }
+
 
   const isLiked = await checkUserLiked(post.id);
   const isBookmarked = await checkUserBookmarked(post.id);
@@ -147,9 +212,10 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
 
 
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-10 leading-[0.95] text-foreground tracking-tighter">
+          <h1 className="text-4xl md:text-6xl font-black mb-10 leading-[1.05] text-foreground tracking-tight">
             {post.title}
           </h1>
+
 
           {/* Premium Author Row */}
           <div className="flex items-center gap-6 py-10 mb-16 border-y border-border">

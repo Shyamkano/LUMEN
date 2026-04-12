@@ -8,9 +8,19 @@ export const SuggestionList = forwardRef((props: any, ref) => {
   const selectItem = (index: number) => {
     const item = props.items[index];
     if (item) {
-      props.command({ id: item.id, label: item.username || item.full_name });
+      // Ensure we NEVER pass the string "null"
+      const username = item.username && item.username !== 'null' ? item.username : null;
+      const fullName = item.full_name && item.full_name !== 'null' ? item.full_name : null;
+      
+      const label = username || fullName || `Resident_${item.id?.slice(0,4) || 'Alpha'}`;
+      
+      props.command({ id: item.id, label });
     }
   };
+
+
+
+
 
   const upHandler = () => {
     setSelectedIndex((selectedIndex + props.items.length - 1) % props.items.length);
@@ -64,9 +74,12 @@ export const SuggestionList = forwardRef((props: any, ref) => {
                 )}
               </div>
               <div className="flex flex-col">
-                <span className="text-[11px] font-black tracking-tight">{item.full_name || item.username}</span>
-                <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest">@{item.username}</span>
+                <span className="text-[11px] font-black tracking-tight">{item.full_name || item.username || 'Resident'}</span>
+                {item.username && item.username !== 'null' && (
+                  <span className="text-[9px] font-bold opacity-40 uppercase tracking-widest">@{item.username}</span>
+                )}
               </div>
+
             </button>
           ))}
         </div>

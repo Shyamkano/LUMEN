@@ -1,10 +1,12 @@
-import { getPosts, getTrendingPosts } from '@/app/actions/posts';
+import { getPosts, getTrendingPosts, getPopularTags } from '@/app/actions/posts';
 import { FeedList } from '@/components/feed/FeedList';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
-import { PenTool, Zap, Code, Mic, TrendingUp } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import type { Post } from '@/types';
+import { Suspense } from 'react';
+import { Loader2, PenTool, Zap, Code, Mic, TrendingUp } from 'lucide-react';
+
 
 import { UserSearchWidget } from '@/components/social/UserSearchWidget';
 
@@ -16,6 +18,11 @@ export default async function FeedPage() {
 
   // Fetch true trending posts based on engagement
   const trendingList = await getTrendingPosts();
+
+  // Fetch dynamic topics
+  const popularTags = await getPopularTags(50);
+  const trendingTags = popularTags.slice(0, 7); // Show only top 7 as 'trending'
+  const remainingTags = popularTags.slice(7);
 
   return (
     <div className="max-w-7xl mx-auto px-6 relative">
@@ -41,8 +48,15 @@ export default async function FeedPage() {
               <h2 className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground">Recent Synchronizations</h2>
               <div className="h-px flex-1 bg-border/40" />
             </div>
-            <FeedList />
+            <Suspense fallback={
+              <div className="flex justify-center py-20">
+                <Loader2 className="animate-spin text-muted-foreground" />
+              </div>
+            }>
+              <FeedList />
+            </Suspense>
           </section>
+
         </div>
 
 
@@ -60,9 +74,6 @@ export default async function FeedPage() {
               </Link>
             </div>
           )}
-
-          {/* User Search Widget */}
-          <UserSearchWidget />
 
           {/* Trending Posts Widget */}
           <div className="space-y-8">
@@ -101,13 +112,19 @@ export default async function FeedPage() {
           <div className="pt-8 border-t border-border">
             <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6">Explore Topics</h3>
             <div className="flex flex-wrap gap-2">
-              {['Education', 'Programming', 'Self Improvement', 'Productivity', 'Research', 'Life Logs'].map(tag => (
-                <Link key={tag} href="/feed" className="px-4 py-2 rounded-full bg-muted/5 hover:bg-foreground hover:text-background text-foreground text-xs font-bold transition-all border border-border">
-                  {tag}
+              {trendingTags.map(tag => (
+                <Link key={tag} href={`/feed?tag=${encodeURIComponent(tag)}`} className="px-3 py-1.5 rounded-full bg-muted/5 hover:bg-foreground hover:text-background text-foreground text-[10px] font-black uppercase tracking-wider transition-all border border-border">
+                  #{tag}
                 </Link>
               ))}
+              {remainingTags.length > 0 && (
+                <button className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground hover:underline transition-all pt-2 block w-full text-left">
+                  + {remainingTags.length} More Topics
+                </button>
+              )}
             </div>
           </div>
+
 
         </aside>
       </div>

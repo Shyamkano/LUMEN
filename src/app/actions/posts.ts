@@ -45,30 +45,37 @@ export async function createPost(formData: {
 
   let anonId = null;
   if (is_anonymous) {
-    // 1. Check for existing identity
-    const { data: identity } = await supabase
-      .from('anonymous_identities')
-      .select('id')
-      .eq('user_id', user.id)
-      .limit(1)
-      .maybeSingle();
-      
-    if (identity) {
-      anonId = identity.id;
-    } else {
-      // 2. First-time anonymous poster? Create their identity now.
-      const { data: newIdentity, error: identError } = await supabase
+    try {
+      // 1. Check for existing identity
+      const { data: identity } = await supabase
         .from('anonymous_identities')
-        .insert([{ 
-          user_id: user.id, 
-          alias_name: `Resident-${user.id.slice(0, 4)}`,
-          avatar_seed: Math.random().toString(36).substring(7)
-        }])
         .select('id')
-        .single();
-      
-      if (identError) console.error('Identity creation failed:', identError);
-      anonId = newIdentity?.id;
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+        
+      if (identity) {
+        anonId = identity.id;
+      } else {
+        // 2. First-time anonymous poster? Create their identity now.
+        const { data: newIdentity, error: identError } = await supabase
+          .from('anonymous_identities')
+          .insert([{ 
+            user_id: user.id, 
+            alias_name: `Resident-${user.id.slice(0, 4)}`,
+            avatar_seed: Math.random().toString(36).substring(7)
+          }])
+          .select('id')
+          .single();
+        
+        if (identError) {
+          console.error('Identity creation failed:', identError);
+          return { error: `Anonymous Protocol Failure: ${identError.message}` };
+        }
+        anonId = newIdentity?.id;
+      }
+    } catch (e) {
+      console.error('Anon identity logic error:', e);
     }
   }
 
@@ -80,19 +87,20 @@ export async function createPost(formData: {
       type,
       status,
       author_id: user.id,
-      anon_id: anonId,
+      anon_id: anonId || null,
       slug,
       is_anonymous,
       audio_url,
       cover_image,
-      tags,
+      tags: Array.isArray(tags) ? tags : [],
       read_time,
     }])
     .select('id')
     .single();
 
   if (error || !post) {
-    return { error: error?.message || 'Failed to create post' };
+    console.error('Post creation error:', error);
+    return { error: error?.message || 'Failed to initialize synchronization.' };
   }
 
   // Insert audio metadata if any
@@ -102,8 +110,6 @@ export async function createPost(formData: {
       audio_url,
     }]);
   }
-
-
 
   // Insert code snippets if any
   if (code_snippets.length > 0 && (type === 'code' || type === 'blog')) {
@@ -126,9 +132,9 @@ export async function createPost(formData: {
   }]);
 
   revalidatePath('/');
-  if (status === 'published') {
-    redirect(`/post/${slug}`);
-  }
+  revalidatePath('/feed');
+  revalidatePath('/dashboard');
+  
   return { success: true, slug };
 }
 
@@ -145,7 +151,7 @@ export async function updatePost(
 ) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Not authenticated' };
+  if (!user) return { error: 'Access Denied: You must be logged in to modify logs.' };
 
   // Get current version count
   const { count } = await supabase
@@ -153,7 +159,7 @@ export async function updatePost(
     .select('*', { count: 'exact', head: true })
     .eq('post_id', postId);
 
-  const updateData: Record<string, unknown> = {};
+  const updateData: Record<string, any> = {};
   if (formData.title !== undefined) updateData.title = formData.title;
   if (formData.content !== undefined) {
     updateData.content = formData.content;
@@ -161,7 +167,7 @@ export async function updatePost(
   }
   if (formData.status !== undefined) updateData.status = formData.status;
   if (formData.cover_image !== undefined) updateData.cover_image = formData.cover_image;
-  if (formData.tags !== undefined) updateData.tags = formData.tags;
+  if (formData.tags !== undefined) updateData.tags = Array.isArray(formData.tags) ? formData.tags : [];
 
 
   // Check if user is admin
@@ -179,29 +185,31 @@ export async function updatePost(
     query.eq('author_id', user.id);
   }
 
-  const { error } = await query;
+  const { data: updatedPost, error } = await query.select('slug').single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error('Update error:', error);
+    return { error: `Update Protocol Failed: ${error.message}` };
+  }
 
   // Log Moderation Action if Admin
   if (isAdmin && formData.status !== undefined) {
-    // Fetch target post info for the log
+    // Fetch target author info for the log
     const { data: targetPost } = await client.from('posts').select('author_id').eq('id', postId).single();
     
     await client.from('moderation_logs').insert([{
       admin_id: user.id,
-      target_user_id: targetPost?.author_id,
-      action_type: formData.status === 'draft' ? 'HIDE_POST' : 'RESTORE_POST',
-      reason: `Post status changed via global moderation shield.`,
+      post_id: postId,
+      action: `status_change_${formData.status}`,
     }]);
   }
 
-  // Save version
-  if (formData.content !== undefined || formData.title !== undefined) {
+  // Create new version if content changed
+  if (formData.content !== undefined) {
     await supabase.from('post_versions').insert([{
       post_id: postId,
       content: formData.content,
-      title: formData.title,
+      title: formData.title || updateData.title || (await supabase.from('posts').select('title').eq('id', postId).single()).data?.title,
       version_num: (count || 0) + 1,
     }]);
   }
@@ -224,9 +232,14 @@ export async function updatePost(
   revalidatePath('/', 'layout');
   revalidatePath('/feed');
   revalidatePath('/dashboard');
-  revalidatePath('/admin');
-  return { success: true };
+  if (updatedPost?.slug) {
+    revalidatePath(`/post/${updatedPost.slug}`);
+  }
+  
+  return { success: true, slug: updatedPost?.slug };
 }
+
+
 
 export async function deletePost(postId: string) {
   const supabase = await createClient();
@@ -611,3 +624,41 @@ export async function getTrendingPosts() {
     })
     .slice(0, 5);
 }
+
+export async function getPopularTags(limit = 15) {
+  const supabase = await createClient();
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('tags')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  const tagCounts: Record<string, number> = {};
+  posts?.forEach(p => {
+    if (Array.isArray(p.tags)) {
+      p.tags.forEach(t => {
+        tagCounts[t] = (tagCounts[t] || 0) + 1;
+      });
+    }
+  });
+
+  // Default fallback tags if data is sparse
+  const fallbackTags = [
+    'Education', 'Programming', 'Self Improvement', 'Productivity', 'Research', 'Life Logs', 
+    'AI', 'Coding', 'Design', 'Future', 'Tech', 'Startup', 'Health', 'Mental Health', 'Writing',
+    'Science', 'Math', 'Philosophy', 'Art', 'Music', 'Economics', 'Politics', 'History',
+    'Engineering', 'Biology', 'Physics', 'Space', 'Environment', 'Food', 'Travel', 'Fashion',
+    'Gaming', 'Movies', 'Books', 'News', 'Culture', 'Social Media', 'Marketing', 'Business'
+  ];
+
+  const trendingTags = Object.entries(tagCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([tag]) => tag);
+
+  // Combine trending and fallbacks, then deduplicate
+  const allTags = [...new Set([...trendingTags, ...fallbackTags])];
+  
+  return allTags.slice(0, limit);
+}
+
