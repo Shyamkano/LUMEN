@@ -113,7 +113,7 @@ const PersistentImage = Node.create({
 });
 
 export function TipTapEditor({
-  editor: externalEditor,
+  editor,
   content,
   onChange,
   placeholder = 'Start writing...',
@@ -125,53 +125,17 @@ export function TipTapEditor({
 }: TipTapEditorProps) {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const internalEditor = useEditor(externalEditor ? {} as any : {
-    extensions: [
-      StarterKit.configure({ 
-        codeBlock: false,
-        ...({ image: false } as any),
-      }),
-      Placeholder.configure({ placeholder }),
-      LinkExt.configure({ 
-        openOnClick: false,
-        autolink: true,
-        linkOnPaste: true,
-        HTMLAttributes: { class: 'text-foreground hover:opacity-70 underline underline-offset-4 decoration-2 font-bold transition-all' }
-      }),
-      PersistentImage,
-      Underline,
-      CodeBlockLowlight.configure({ lowlight }),
-      CustomMention.configure({}),
-      ...(maxLength ? [CharacterCount.configure({ limit: maxLength })] : []),
-    ],
-    content: content || undefined,
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      const json = editor.getJSON();
-      onChange?.(json);
-      if (autoSaveKey) {
-        if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-        autoSaveTimer.current = setTimeout(() => {
-          localStorage.setItem(`flow-draft-${autoSaveKey}`, JSON.stringify(json));
-        }, 1000);
-      }
-    },
-    editorProps: {
-      attributes: {
-        class: `prose prose-zinc prose-lg max-w-none focus:outline-none min-h-[500px] px-1 py-8 editor-content ${className}`,
-      },
-    },
-  });
-
-  const editor = externalEditor || internalEditor;
-
   // Sync content from parent ONLY on initial load — after that, editor is source of truth
   const hasInitialContentRef = useRef(false);
+
   useEffect(() => {
-    if (!editor) return;
-    if (hasInitialContentRef.current) return;
+    if (!editor || !content || hasInitialContentRef.current) return;
     
-    if (content) {
+    // Only set content if the editor is basically empty (it has one empty paragraph)
+    // and we have incoming content to sync.
+    const isEditorEmpty = editor.isEmpty || editor.getText().trim() === '';
+    
+    if (isEditorEmpty && content) {
       hasInitialContentRef.current = true;
       editor.commands.setContent(content, { emitUpdate: false });
     }

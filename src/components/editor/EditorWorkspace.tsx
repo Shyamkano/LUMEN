@@ -217,7 +217,8 @@ export default function EditorWorkspace() {
         class: 'prose prose-zinc prose-lg max-w-none focus:outline-none min-h-[500px] px-1 py-12 editor-content',
       },
     },
-  });
+  }, []); // Empty dependency array ensures it's created only once
+
 
   // Fetch Author Identity
   useEffect(() => {

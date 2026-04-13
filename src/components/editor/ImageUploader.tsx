@@ -19,6 +19,7 @@ export function ImageUploader({ imageUrl, onUpload, onRemove, label = 'Add Cover
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log(`[ImageUploader] Starting upload for file: ${file.name}, size: ${file.size}, type: ${file.type}`);
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -30,13 +31,18 @@ export function ImageUploader({ imageUrl, onUpload, onRemove, label = 'Add Cover
         body: formData,
       });
 
+      console.log(`[ImageUploader] Response status: ${res.status}`);
+
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.error || 'Upload failed');
+        console.error(`[ImageUploader] Upload failed:`, errorData);
+        throw new Error(errorData.error || `Upload failed with status ${res.status}`);
       }
       const data = await res.json();
+      console.log(`[ImageUploader] Success! URL: ${data.url}`);
       onUpload(data.url);
     } catch (error: any) {
+      console.error(`[ImageUploader] Catch error:`, error);
       alert(`Failed to upload image: ${error.message}`);
     } finally {
       setIsUploading(false);

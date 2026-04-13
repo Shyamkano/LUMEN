@@ -1,4 +1,5 @@
 'use client';
+import { useState, useMemo } from 'react';
 
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
@@ -103,21 +104,22 @@ interface PreviewPanelProps {
 }
 
 export function PreviewPanel({ title, content, type, codeSnippets = [] }: PreviewPanelProps) {
-  let html = '';
-  try {
-    if (content) {
+  const html = useMemo(() => {
+    if (!content) return '';
+    try {
       // Create a deep copy to avoid mutating the original form state
       let doc = JSON.parse(JSON.stringify(content));
       doc = fixContentNodes(doc);
       
       if (typeof doc === 'object' && doc !== null && (doc as any).type === 'doc') {
-        html = generateHTML(doc as any, extensions);
+        return generateHTML(doc as any, extensions);
       }
+      return '';
+    } catch (err) {
+      console.error('Preview Generation Error:', err);
+      return `<p class="text-zinc-400 italic">Preview temporary unavailable (Rendering sync in progress...)</p>`;
     }
-  } catch (err) {
-    console.error('Preview Generation Error:', err);
-    html = `<p class="text-zinc-400 italic">Preview temporary unavailable (Rendering sync in progress...)</p>`;
-  }
+  }, [content]);
 
   return (
     <div className="preview-panel bg-white rounded-2xl border border-zinc-100 overflow-hidden">
