@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Zap } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { toggleLike, toggleBookmark } from '@/app/actions/engagement';
 
