@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui';
+import { optimizeImage } from '@/lib/utils/image';
 
 interface ImageUploaderProps {
   imageUrl: string | null;
@@ -19,11 +20,16 @@ export function ImageUploader({ imageUrl, onUpload, onRemove, label = 'Add Cover
     const file = e.target.files?.[0];
     if (!file) return;
 
-    console.log(`[ImageUploader] Starting upload for file: ${file.name}, size: ${file.size}, type: ${file.type}`);
+    console.log(`[ImageUploader] Original file size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    
     setIsUploading(true);
     try {
+      // Optimize image if it's over 1MB or simply large
+      const processedFile = file.size > 1 * 1024 * 1024 ? await optimizeImage(file) : file;
+      console.log(`[ImageUploader] Processed size: ${(processedFile.size / 1024 / 1024).toFixed(2)}MB`);
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', processedFile, file.name.replace(/\.[^/.]+$/, ".jpg")); // Ensure extension matches output format
       formData.append('bucket', 'post-images');
 
       const res = await fetch('/api/upload', {

@@ -8,6 +8,7 @@ import {
   Undo, Redo, Minus, Upload, Link2, X, Sparkles, Wand2, Type, Zap
 } from 'lucide-react';
 import { useState, useRef } from 'react';
+import { optimizeImage } from '@/lib/utils/image';
 
 interface EditorToolbarProps {
   editor: ReturnType<typeof import('@tiptap/react').useEditor> | null;
@@ -64,8 +65,10 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
 
     setIsUploading(true);
     try {
+      const processedFile = file.size > 1 * 1024 * 1024 ? await optimizeImage(file) : file;
+
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', processedFile, file.name.replace(/\.[^/.]+$/, ".jpg"));
       formData.append('bucket', 'post-images');
 
       const res = await fetch('/api/upload', {
