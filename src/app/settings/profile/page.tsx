@@ -58,7 +58,9 @@ export default function ProfileSettingsPage() {
     e.preventDefault();
     setSaving(true);
     
-    if (formData.username.includes(' ')) {
+    const normalizedUsername = formData.username.toLowerCase().trim();
+    
+    if (normalizedUsername.includes(' ')) {
       setNotification({ show: true, type: 'error', message: 'Username cannot contain spaces.' });
       setSaving(false);
       return;
@@ -68,6 +70,7 @@ export default function ProfileSettingsPage() {
       .from('profiles')
       .update({
         ...formData,
+        username: normalizedUsername,
         avatar_url: avatarUrl,
       })
       .eq('id', user.id);
