@@ -11,7 +11,8 @@ import {
   Sparkles, 
   Layers, 
   Eye, 
-  Globe 
+  Globe,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { logout, deleteAccount } from '@/app/auth/actions';
