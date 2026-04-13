@@ -86,15 +86,15 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
     }
 
-    // Call Mistral AI
+    // Call Mistral AI with faster model
     const chatResponse = await mistral.chat.complete({
-      model: 'mistral-small-latest',
+      model: 'open-mistral-7b',
       messages: [
         {
           role: 'system',
           content: expectJson
-            ? 'You are a helpful writing assistant. Always respond with valid JSON.'
-            : 'You are a helpful writing assistant. Respond concisely and directly.',
+            ? 'You are a helpful writing assistant. Always respond with MINIFIED valid JSON. No preamble.'
+            : 'You are a helpful writing assistant. Respond with extreme conciseness. No preamble.',
         },
         { role: 'user', content: prompt },
       ],
@@ -118,7 +118,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ result });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'AI processing failed';
-    console.error('AI API error:', message);
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error('Mistral Primary Failure, pivoting to HuggingFace fallback:', message);
+
+    try {
+      // Fallback to HuggingFace Inference API
+      const hfKey = process.env.HUGGINGFACE_API_KEY;
+      if (!hfKey) throw new Error('No fallback API key available');
+
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-72B-Instruct",
+        {
+          headers: {
+            Authorization: `Bearer ${hfKey}`,
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+          body: JSON.stringify({
+            inputs: `[INST] ${expectJson ? 'Respond with MINIFIED JSON only.' : 'Respond concisely.'} ${prompt} [/INST]`,
+          }),
+        }
+      );
+
+      const hfResult = await response.json();
+      const rawFallback = hfResult?.[0]?.generated_text || hfResult?.generated_text || "";
+      
+      // Extract response from chat template if present
+      let result = rawFallback.split('[/INST]').pop()?.trim() || rawFallback;
+
+      if (expectJson) {
+        try {
+          return NextResponse.json({ result: JSON.parse(result) });
+        } catch {
+          return NextResponse.json({ result });
+        }
+      }
+
+      return NextResponse.json({ result });
+
+    } catch (fallbackError: unknown) {
+      const finalMessage = fallbackError instanceof Error ? fallbackError.message : 'Total AI failure';
+      console.error('Total AI failure (Primary & Fallback):', finalMessage);
+      return NextResponse.json({ error: finalMessage }, { status: 500 });
+    }
   }
 }

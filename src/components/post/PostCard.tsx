@@ -81,7 +81,12 @@ export function PostCard({ post }: { post: Post }) {
 
           {!post.is_anonymous && post.profile?.id && (
             <div className="z-10 relative" onClick={(e) => e.stopPropagation()}>
-              <FollowButton followingId={post.profile.id} showCount={false} className="h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full border-border hover:bg-foreground hover:text-background" />
+              <FollowButton 
+                followingId={post.profile.id} 
+                initialIsFollowing={(post as any).isFollowing}
+                showCount={false} 
+                className="h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full border-border hover:bg-foreground hover:text-background" 
+              />
             </div>
           )}
         </div>

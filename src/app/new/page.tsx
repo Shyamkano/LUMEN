@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { mergeAttributes } from '@tiptap/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -20,8 +21,21 @@ import slugify from 'slugify';
 import {
   Eye, EyeOff, PanelRightOpen, Save,
   FileText, Zap, Code, Mic, Ghost,
-  Send, ChevronDown, Loader2, X,
+  Send, ChevronDown, Loader2, X, Sparkles, Wand2
 } from 'lucide-react';
+import { useEditor } from '@tiptap/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import LinkExt from '@tiptap/extension-link';
+import ImageExt from '@tiptap/extension-image';
+import Underline from '@tiptap/extension-underline';
+import CharacterCount from '@tiptap/extension-character-count';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import Paragraph from '@tiptap/extension-paragraph';
+import { common, createLowlight } from 'lowlight';
+import Mention from '@tiptap/extension-mention';
+import { searchUsers } from '@/app/actions/profiles';
 
 import type { PostType, Draft } from '@/types';
 
@@ -33,6 +47,78 @@ const POST_TYPE_CONFIG = {
 };
 
 type ViewMode = 'edit' | 'preview' | 'split';
+
+const CustomMention = Mention.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      id: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-id'),
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.id) return {};
+          return { 'data-id': attributes.id };
+        },
+      },
+      label: {
+        default: null,
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-label'),
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.label) return {};
+          return { 'data-label': attributes.label };
+        },
+      },
+    };
+  },
+  renderHTML({ node, HTMLAttributes }) {
+    const label = node.attrs.label;
+    const text = (!label || label === 'null') ? '@Resident' : `@${label}`;
+    const attrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
+      class: 'mention-tag',
+    });
+    return ['span', attrs, text];
+  },
+});
+
+const CustomParagraph = Paragraph.extend({
+  addAttributes() {
+    return {
+      class: { default: null },
+    };
+  },
+});
+
+const GLOBAL_TIPTAP_EXTENSIONS = [
+  StarterKit.configure({
+    codeBlock: false,
+    heading: { levels: [1, 2, 3, 4] },
+    paragraph: false,
+  }),
+  CustomParagraph,
+  Placeholder.configure({ placeholder: 'Start writing something brilliant...' }),
+  LinkExt.configure({ 
+    openOnClick: false,
+    autolink: true,
+    linkOnPaste: true,
+    HTMLAttributes: { class: 'text-foreground hover:opacity-70 underline underline-offset-4 decoration-2 font-bold transition-all' }
+  }),
+  ImageExt.configure({
+    HTMLAttributes: { class: 'rounded-3xl border border-border my-16 mx-auto block transition-all duration-700 w-full' }
+  }),
+  Underline,
+  CodeBlockLowlight.configure({ lowlight: createLowlight(common) }),
+  CustomMention.configure({
+    HTMLAttributes: {
+      class: 'mention bg-zinc-100/50 text-foreground px-1.5 py-0.5 rounded-md font-bold border border-border/50 hover:bg-foreground hover:text-background transition-colors cursor-pointer',
+    },
+    suggestion: {
+      items: async ({ query }: { query: string }) => {
+        if (!query || query.length < 1) return [];
+        return await searchUsers(query);
+      },
+    }
+  }),
+];
 
 export default function NewPostPage() {
   const router = useRouter();
@@ -56,6 +142,28 @@ export default function NewPostPage() {
   const [tagInput, setTagInput] = useState('');
   const [authorProfile, setAuthorProfile] = useState<any>(null);
   const [shadowIdentity, setShadowIdentity] = useState<any>(null);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [queryClient] = useState(() => new QueryClient());
+
+  const lowlight = createLowlight(common);
+
+  const CustomMention = Mention.extend({
+    // ... logic preserved or imported
+  });
+
+  const editor = useEditor({
+    extensions: GLOBAL_TIPTAP_EXTENSIONS,
+    content: undefined,
+    immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      setValue('content', editor.getJSON());
+    },
+    editorProps: {
+      attributes: {
+        class: 'prose prose-zinc prose-lg max-w-none focus:outline-none min-h-[500px] px-1 py-12 editor-content',
+      },
+    },
+  });
 
   // Fetch Author Identity
   useEffect(() => {
@@ -272,18 +380,77 @@ export default function NewPostPage() {
   const isMicro = postType === 'micro';
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-8 animate-fade-in bg-background">
+    <QueryClientProvider client={queryClient}>
+      <div className="max-w-screen-xl mx-auto px-6 py-8 animate-fade-in bg-background pb-32 md:pb-8">
       {/* Top bar - Hardened Visibility & Layout Sync */}
-      <div className="flex items-center justify-between mb-16 sticky top-20 bg-background/95 backdrop-blur-md z-30 pt-6 pb-6 border-b border-border/10">
-        <div className="flex items-center gap-6">
-          <Link href="/feed" className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium">
-            ← Back
-          </Link>
+      <div className="sticky top-16 md:top-20 bg-background/95 backdrop-blur-md z-40 -mx-6 px-6 pt-6 pb-6 border-b border-border/10 mb-12 md:mb-16">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/feed" className="w-10 h-10 flex items-center justify-center rounded-full border border-border hover:border-foreground transition-all shrink-0">
+              <X size={16} />
+            </Link>
 
-          {/* Identity Signal */}
-          <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-border">
-            <div className={`w-2 h-2 rounded-full ${isAnonymous ? 'bg-black animate-pulse' : 'bg-emerald-500'}`} />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+            {/* Type selector */}
+            <div className="relative">
+              <button
+                onClick={() => setShowTypeSelector(!showTypeSelector)}
+                type="button"
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+                  showTypeSelector ? 'border-foreground bg-foreground text-background shadow-xl' : 'border-border hover:border-foreground text-foreground'
+                }`}
+              >
+                {(() => { const Icon = POST_TYPE_CONFIG[postType].icon; return <Icon size={14} />; })()}
+                <span className="hidden xs:inline">{POST_TYPE_CONFIG[postType].label}</span>
+                <ChevronDown size={12} className={`transition-transform ${showTypeSelector ? 'rotate-180' : ''}`} />
+              </button>
+
+              {showTypeSelector && (
+                <div className="absolute top-12 left-0 w-64 bg-background rounded-2xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] border border-border py-2 z-50 animate-scale-in">
+                  {(Object.entries(POST_TYPE_CONFIG) as [PostType, typeof POST_TYPE_CONFIG.blog][]).map(([type, config]) => {
+                    const Icon = config.icon;
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => { setPostType(type); setShowTypeSelector(false); setValue('type', type); }}
+                        type="button"
+                        className={`flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/5 transition-colors ${
+                          postType === type ? 'bg-muted/10' : ''
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center`}>
+                          <Icon size={16} />
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-foreground">{config.label}</p>
+                          <p className="text-[10px] opacity-40 uppercase font-bold tracking-tighter text-muted-foreground">{config.description}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Action Row */}
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSubmit(onSubmit)}
+              disabled={loading}
+              className="rounded-full h-10 md:h-12 px-6 md:px-8 gap-2 font-black uppercase tracking-widest text-[10px]"
+            >
+              {loading ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              <span>{loading ? 'Syncing...' : (isEditingExisting ? 'Save' : 'Publish')}</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Secondary Utility Bar (Responsive Scroll) */}
+        <div className="flex items-center gap-4 mt-8 overflow-x-auto no-scrollbar pb-2">
+           {/* Identity Signal */}
+           <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-muted/5 border border-border shrink-0">
+            <div className={`w-1.5 h-1.5 rounded-full ${isAnonymous ? 'bg-black animate-pulse shadow-[0_0_8px_rgba(0,0,0,0.5)]' : 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]'}`} />
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">
               Tracing: <span className="text-foreground">
                 {isAnonymous 
                   ? (shadowIdentity?.alias_name || 'Incognito') 
@@ -292,101 +459,50 @@ export default function NewPostPage() {
             </span>
           </div>
 
-          {/* Type selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowTypeSelector(!showTypeSelector)}
-              type="button"
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-all ${
-                showTypeSelector ? 'border-foreground bg-foreground text-background shadow-sm' : 'border-border hover:border-foreground text-foreground'
-              }`}
-            >
-              {(() => { const Icon = POST_TYPE_CONFIG[postType].icon; return <Icon size={16} />; })()}
-              {POST_TYPE_CONFIG[postType].label}
-              <ChevronDown size={14} className={`transition-transform ${showTypeSelector ? 'rotate-180' : ''}`} />
-            </button>
-
-            {showTypeSelector && (
-              <div className="absolute top-12 left-0 w-64 bg-background rounded-2xl shadow-2xl border border-border py-2 z-50 animate-scale-in">
-                {(Object.entries(POST_TYPE_CONFIG) as [PostType, typeof POST_TYPE_CONFIG.blog][]).map(([type, config]) => {
-                  const Icon = config.icon;
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => { setPostType(type); setShowTypeSelector(false); setValue('type', type); }}
-                      type="button"
-                      className={`flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-muted/5 transition-colors ${
-                        postType === type ? 'bg-muted/10' : ''
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center`}>
-                        <Icon size={16} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">{config.label}</p>
-                        <p className="text-xs text-muted-foreground">{config.description}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
           {/* Draft management */}
-          <DraftManager onLoadDraft={loadDraft} />
+          <div className="shrink-0 flex items-center">
+            <DraftManager onLoadDraft={loadDraft} />
+          </div>
 
           {/* Save draft */}
-          <button onClick={handleSaveDraft} type="button" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-            <Save size={14} />
-            {lastSaved ? `Saved ${lastSaved}` : 'Save Draft'}
+          <button onClick={handleSaveDraft} type="button" className="shrink-0 flex items-center gap-2 px-4 py-2 rounded-full border border-border text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:border-foreground transition-all">
+            <Save size={12} />
+            {lastSaved ? `Synced ${lastSaved}` : 'Sync Draft'}
           </button>
 
           {/* Anonymous toggle */}
           <button
             onClick={() => setIsAnonymous(!isAnonymous)}
             type="button"
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
+            className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border ${
               isAnonymous
-                ? 'bg-foreground text-background border-foreground'
-                : 'text-muted-foreground border-border hover:border-muted-foreground'
+                ? 'bg-foreground text-background border-foreground shadow-lg'
+                : 'text-muted-foreground border-border hover:border-foreground hover:text-foreground'
             }`}
           >
-            <Ghost size={14} />
-            {isAnonymous ? 'Anonymous' : 'Public'}
+            <Ghost size={12} />
+            {isAnonymous ? 'Shadow Protocol Active' : 'Protocol: Public'}
           </button>
 
           {/* View mode toggles */}
           {!isMicro && (
-            <div className="flex items-center border border-border rounded-full p-1 bg-muted/5">
+            <div className="shrink-0 flex items-center border border-border rounded-full p-1 bg-muted/5">
               {(['edit', 'preview', 'split'] as ViewMode[]).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode)}
                   type="button"
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all ${
                     viewMode === mode 
-                      ? 'bg-foreground text-background shadow-sm' 
+                      ? 'bg-foreground text-background shadow-md' 
                       : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                  {mode}
                 </button>
               ))}
             </div>
           )}
-
-          {/* Publish */}
-          <Button
-            onClick={handleSubmit(onSubmit)}
-            disabled={loading}
-            className="rounded-full px-8 gap-2 font-bold"
-          >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            {loading ? 'Publishing...' : (isEditingExisting ? 'Save Changes' : 'Publish')}
-          </Button>
         </div>
       </div>
 
@@ -399,7 +515,7 @@ export default function NewPostPage() {
 
       {/* Main editor area */}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <div className={`${viewMode === 'split' && !isMicro ? 'grid grid-cols-2 gap-12' : 'max-w-3xl mx-auto'}`}>
+        <div className={`${viewMode === 'split' && !isMicro ? 'grid grid-cols-1 lg:grid-cols-2 gap-12' : 'max-w-3xl mx-auto'}`}>
           {/* Editor side */}
           {(viewMode === 'edit' || viewMode === 'split') && (
             <div className="space-y-10">
@@ -499,10 +615,12 @@ export default function NewPostPage() {
                     name="content"
                     render={({ field }) => (
                       <TipTapEditor
+                        editor={editor}
                         content={field.value as Record<string, unknown> | undefined}
                         onChange={field.onChange}
                         placeholder="Write something brilliant..."
                         autoSaveKey={postType}
+                        onOpenAI={() => setShowAIAssistant(true)}
                       />
                     )}
                   />
@@ -558,20 +676,20 @@ export default function NewPostPage() {
         </div>
       </form>
 
-      {/* AI Assistant */}
-      {!isMicro && (
-        <AIAssistant
-          title={title || ''}
-          content={content as Record<string, unknown>}
-          onInsertTitle={(t) => setValue('title', t)}
-          onAddTag={(t) => {
-            if (!tags.includes(t)) {
-              setTags(prev => [...prev, t].slice(0, 10)); // Limit to 10 tags
-            }
-          }}
-        />
-      )}
+      <AIAssistant
+        isOpen={showAIAssistant}
+        onClose={() => setShowAIAssistant(false)}
+        title={title || ''}
+        content={content as Record<string, unknown>}
+        onInsertTitle={(t) => setValue('title', t)}
+        onInsertContent={(c) => editor?.chain().focus().insertContent(c).run()}
+        onAddTag={(t) => {
+          if (!tags.includes(t)) {
+            setTags(prev => [...prev, t].slice(0, 10)); // Limit to 10 tags
+          }
+        }}
+      />
     </div>
-
+    </QueryClientProvider>
   );
 }

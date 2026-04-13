@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 
 function makeQueryClient() {
   return new QueryClient({
@@ -31,9 +31,8 @@ function getQueryClient() {
 }
 
 export function QueryProvider({ children }: { children: ReactNode }) {
-  // NOTE: Avoid useState when initializing the query client if you want
-  // to avoid hydration mismatches or losing context during suspends.
-  const queryClient = getQueryClient();
+  // Use state to ensure the query client is stable across re-renders
+  const [queryClient] = useState(() => getQueryClient());
 
   return (
     <QueryClientProvider client={queryClient}>

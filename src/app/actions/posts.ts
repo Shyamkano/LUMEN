@@ -132,11 +132,17 @@ export async function createPost(formData: {
     version_num: 1,
   }]);
 
-  // Notify followers
-  const { data: followers } = await supabase.from('followers').select('follower_id').eq('following_id', user.id);
-  if (followers && followers.length > 0) {
-    for (const f of followers) {
-      await createNotification(f.follower_id, user.id, 'post', post.id);
+  // Notify followers if published
+  if (status === 'published') {
+    const { data: followers } = await supabase
+      .from('followers')
+      .select('follower_id')
+      .eq('following_id', user.id);
+      
+    if (followers && followers.length > 0) {
+      await Promise.all(followers.map(f => 
+        createNotification(f.follower_id, user.id, 'post', post.id)
+      ));
     }
   }
 
@@ -470,28 +476,30 @@ export async function getPostsByUsername(username: string) {
   const { data: posts } = await query;
   if (!posts) return { posts: [], profile };
 
-  // Fetch likes and comments counts for these specific posts
+  // Parallelize metrics and identity fetching
   const postIds = posts.map(p => p.id);
-  
-  const { data: likesData } = await supabase
-    .from('likes')
-    .select('post_id')
-    .in('post_id', postIds);
+  const authorIds = [profile.id]; // In this context, all posts are by the same profile owner
 
+  const [
+    { data: likesData },
+    { data: commentsData },
+    { data: anonIdentities },
+    { data: followingData }
+  ] = await Promise.all([
+    supabase.from('likes').select('post_id').in('post_id', postIds),
+    supabase.from('comments').select('post_id').in('post_id', postIds),
+    supabase.from('anonymous_identities').select('*').in('user_id', authorIds),
+    currentUser 
+      ? supabase.from('followers').select('following_id').eq('follower_id', currentUser.id).in('following_id', authorIds)
+      : Promise.resolve({ data: [] })
+  ]);
+
+  const followingSet = new Set((followingData || []).map(f => f.following_id));
   const likesCount: Record<string, number> = {};
-  (likesData || []).forEach(l => {
-    likesCount[l.post_id] = (likesCount[l.post_id] || 0) + 1;
-  });
-
-  const { data: commentsData } = await supabase
-    .from('comments')
-    .select('post_id')
-    .in('post_id', postIds);
+  (likesData || []).forEach(l => { likesCount[l.post_id] = (likesCount[l.post_id] || 0) + 1; });
 
   const commentsCount: Record<string, number> = {};
-  (commentsData || []).forEach(c => {
-    commentsCount[c.post_id] = (commentsCount[c.post_id] || 0) + 1;
-  });
+  (commentsData || []).forEach(c => { commentsCount[c.post_id] = (commentsCount[c.post_id] || 0) + 1; });
 
   // Fetch anonymous identities if any
   const hasAnon = posts.some(p => p.is_anonymous);
@@ -513,6 +521,7 @@ export async function getPostsByUsername(username: string) {
       anonymous_identity: post.is_anonymous ? (anonMap.get(originalAuthorId) || null) : null,
       likes_count: likesCount[post.id] || 0,
       comments_count: commentsCount[post.id] || 0,
+      isFollowing: followingSet.has(originalAuthorId),
     };
   });
 

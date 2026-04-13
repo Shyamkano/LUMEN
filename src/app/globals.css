@@ -45,7 +45,7 @@ body {
 strong,
 b {
   color: var(--foreground) !important;
-  font-weight: 800;
+  font-weight: 900 !important;
 }
 
 
@@ -127,6 +127,8 @@ h6 {
 .editor-content img {
   border-radius: 12px;
   margin: 2rem 0;
+  object-fit: contain;
+  max-width: 100vw;
 }
 
 /* TipTap placeholder */
@@ -142,6 +144,10 @@ h6 {
 
 .ProseMirror {
   outline: none !important;
+}
+
+.ProseMirror strong {
+  font-weight: 900 !important;
 }
 
 /* === Animations === */
@@ -285,9 +291,26 @@ body {
 }
 
 .reading-content img {
-  border-radius: 16px;
-  margin: 2rem 0;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 24px;
+  margin: 4rem auto;
+  box-shadow: 0 40px 120px rgba(0, 0, 0, 0.08);
+  object-fit: contain;
+}
+
+.archive-credit {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #a1a1aa;
+  font-style: italic;
+  margin-top: -3rem !important;
+  margin-bottom: 4rem !important;
+  display: block;
 }
 
 /* === Scrollbar === */
@@ -340,4 +363,31 @@ body {
   opacity: 0.1;
   z-index: -1;
   border-radius: inherit;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes reveal-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-reveal {
+  animation: reveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-reveal-down {
+  animation: reveal-down 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

@@ -10,8 +10,15 @@ import { getFollowStats } from '@/app/actions/social';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProfilePage({ params }: { params: Promise<{ username: string }> }) {
-  const resolvedParams = await params;
+export default async function ProfilePage({ 
+  params, 
+  searchParams 
+}: { 
+  params: Promise<{ username: string }>,
+  searchParams: Promise<{ tab?: string }>
+}) {
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const activeTab = resolvedSearchParams.tab || 'archive';
   const supabase = await createClient();
   const { data: { user: currentUser } } = await supabase.auth.getUser();
 
@@ -29,11 +36,20 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
     notFound();
   }
 
-  // Fetch posts by this user (using the action for consistent privacy rules)
+  // Fetch posts by this user
   const { getPostsByUsername } = await import('@/app/actions/posts');
-  const { posts } = await getPostsByUsername(username);
-
+  const { getUserBookmarks } = await import('@/app/actions/engagement');
+  
   const isOwnProfile = currentUser?.id === profile.id;
+  
+  // Conditionally fetch based on active tab
+  let displayPosts = [];
+  if (activeTab === 'collection' && isOwnProfile) {
+    displayPosts = await getUserBookmarks();
+  } else {
+    const { posts } = await getPostsByUsername(resolvedParams.username.replace('@', ''));
+    displayPosts = posts || [];
+  }
 
   // Fetch real social stats
   const { followers, following } = await getFollowStats(profile.id);
@@ -97,25 +113,49 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
             </div>
           </div>
 
-          <div className="h-px w-full bg-border" />
+          <div className="h-px w-full bg-border/50" />
+
+          {/* Tabs Selector */}
+          <div className="flex items-center gap-8 border-b border-border/50 pb-0 shadow-[0_4px_12px_-12px_rgba(0,0,0,0.5)]">
+            <Link 
+              href={`/profile/${username}?tab=archive`}
+              className={`pb-4 text-xs font-black uppercase tracking-[0.3em] transition-all relative ${activeTab === 'archive' ? 'text-black' : 'text-muted-foreground hover:text-black hover:opacity-70'}`}
+            >
+              Archive
+              {activeTab === 'archive' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black animate-reveal" />}
+            </Link>
+            {isOwnProfile && (
+              <Link 
+                href={`/profile/${username}?tab=collection`}
+                className={`pb-4 text-xs font-black uppercase tracking-[0.3em] transition-all relative ${activeTab === 'collection' ? 'text-black' : 'text-muted-foreground hover:text-black hover:opacity-70'}`}
+              >
+                Collection
+                {activeTab === 'collection' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black animate-reveal" />}
+              </Link>
+            )}
+          </div>
 
           {/* Posts list */}
           <div className="space-y-12">
-            <div className="flex items-center gap-4">
-              <h3 className="text-xl font-black uppercase tracking-widest text-foreground">Archive</h3>
-              <div className="h-px flex-1 bg-border/50" />
-            </div>
-            {posts && posts.length > 0 ? (
+            {displayPosts && displayPosts.length > 0 ? (
               <div className="space-y-12">
-                {posts.map(post => (
+                {displayPosts.map(post => (
                   <PostCard key={post.id} post={{ ...post, profile } as any} />
                 ))}
               </div>
             ) : (
-              <div className="py-24 text-center rounded-[3rem] border border-dashed border-border bg-muted/5">
+              <div className="py-32 text-center rounded-[3rem] border border-dashed border-border bg-muted/5 animate-reveal">
                 <p className="text-muted-foreground font-black uppercase tracking-widest text-sm">
-                  {isOwnProfile ? "Your archive is currently empty." : "This individual has not yet contributed to the LUMEN."}
+                  {activeTab === 'collection' 
+                    ? "Your collection is currently empty." 
+                    : isOwnProfile ? "Your archive is currently empty." : "This individual has not yet contributed to the LUMEN."
+                  }
                 </p>
+                {activeTab === 'collection' && (
+                  <Link href="/feed">
+                    <Button variant="link" className="mt-4 font-black uppercase tracking-widest text-[10px] text-foreground underline underline-offset-4">Explore Narratives</Button>
+                  </Link>
+                )}
               </div>
             )}
           </div>

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /settings/
+Disallow: /auth/callback/
+
+Sitemap: https://lumen-archive.vercel.app/sitemap.xml

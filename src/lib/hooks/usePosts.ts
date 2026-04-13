@@ -34,27 +34,47 @@ async function fetchPosts(type?: PostType | 'discovery' | 'shadows', tag?: strin
     finalPosts = finalPosts.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
-  // Fetch profiles and related data for truncated set
+  // Prep identifier pools
   const visiblePosts = finalPosts.slice(0, 50);
   const authorIds = [...new Set(visiblePosts.map(p => p.author_id))];
-  
-  const { data: profiles } = authorIds.length > 0
-    ? await supabase.from('profiles').select('*').in('id', authorIds)
-    : { data: [] };
-  const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+  const postIds = visiblePosts.map(p => p.id);
 
-  // Fetch anonymous identities
-  const { data: anonIdentities } = await supabase.from('anonymous_identities').select('*').in('user_id', authorIds);
+  // Parallelize metadata fetching
+  const [
+    { data: profiles },
+    { data: anonIdentities },
+    { data: likesData },
+    { data: commentsData },
+    { data: authResult }
+  ] = await Promise.all([
+    supabase.from('profiles').select('*').in('id', authorIds),
+    supabase.from('anonymous_identities').select('*').in('user_id', authorIds),
+    supabase.from('likes').select('post_id').in('post_id', postIds),
+    supabase.from('comments').select('post_id').in('post_id', postIds),
+    supabase.auth.getUser()
+  ]);
+  
+  const user = authResult?.user;
+
+  // Fetch following status in one query if logged in
+  let followingSet = new Set();
+  if (user) {
+    const { data: followingData } = await supabase
+      .from('followers')
+      .select('following_id')
+      .eq('follower_id', user.id)
+      .in('following_id', authorIds);
+    followingSet = new Set((followingData || []).map(f => f.following_id));
+  }
+
+  const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
   const anonMap = new Map((anonIdentities || []).map((a: any) => [a.user_id, a]));
 
-  const postIds = visiblePosts.map(p => p.id);
-  const { data: likesData } = await supabase.from('likes').select('post_id').in('post_id', postIds);
   const likesCount: Record<string, number> = {};
   (likesData || []).forEach((l: { post_id: string }) => {
     likesCount[l.post_id] = (likesCount[l.post_id] || 0) + 1;
   });
 
-  const { data: commentsData } = await supabase.from('comments').select('post_id').in('post_id', postIds);
   const commentsCount: Record<string, number> = {};
   (commentsData || []).forEach((c: { post_id: string }) => {
     commentsCount[c.post_id] = (commentsCount[c.post_id] || 0) + 1;
@@ -66,6 +86,7 @@ async function fetchPosts(type?: PostType | 'discovery' | 'shadows', tag?: strin
     anonymous_identity: post.is_anonymous ? (anonMap.get(post.author_id) || null) : null,
     likes_count: likesCount[post.id] || 0,
     comments_count: commentsCount[post.id] || 0,
+    isFollowing: followingSet.has(post.author_id),
   }));
 }
 
@@ -75,7 +96,6 @@ export function usePosts(type?: PostType | 'discovery' | 'shadows', tag?: string
     queryFn: () => fetchPosts(type, tag),
   });
 }
-
 
 // Like mutation
 export function useLikeMutation() {

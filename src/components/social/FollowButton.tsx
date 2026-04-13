@@ -16,17 +16,24 @@ interface FollowButtonProps {
 export function FollowButton({ followingId, initialIsFollowing = false, className, showCount = false }: FollowButtonProps) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [loading, setLoading] = useState(false);
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(initialIsFollowing === undefined);
   const router = useRouter();
 
+  // Integrated sync and fetch protocol
   useEffect(() => {
+    if (initialIsFollowing !== undefined) {
+      setIsFollowing(initialIsFollowing);
+      setChecking(false);
+      return;
+    }
+
     async function init() {
       const isActuallyFollowing = await checkFollowing(followingId);
       setIsFollowing(isActuallyFollowing);
       setChecking(false);
     }
     init();
-  }, [followingId]);
+  }, [followingId, initialIsFollowing]);
 
   const handleToggleFollow = async () => {
     setLoading(true);

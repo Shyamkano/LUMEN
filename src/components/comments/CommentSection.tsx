@@ -124,7 +124,7 @@ export function CommentSection({ postId, initialCount }: CommentSectionProps) {
       <div className="space-y-12 animate-fade-in">
         {/* Comment input */}
         {user ? (
-          <div className="flex gap-4 items-start mb-16 p-8 rounded-[2rem] bg-card border border-border shadow-2xl shadow-foreground/5">
+          <div className="flex gap-3 md:gap-4 items-start mb-16 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2rem] bg-card border border-border shadow-2xl shadow-foreground/5">
             <div className="w-10 h-10 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-black shrink-0">
               {user.email?.charAt(0).toUpperCase() || 'U'}
             </div>
@@ -143,7 +143,7 @@ export function CommentSection({ postId, initialCount }: CommentSectionProps) {
                 rows={4}
                 className="w-full p-6 rounded-2xl border border-border text-sm font-medium focus:outline-none focus:border-foreground resize-none bg-muted/5 placeholder:text-muted-foreground/60 transition-all leading-relaxed"
               />
-              <div className="flex justify-between items-center bg-muted/5 p-4 rounded-xl border border-border">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-4 bg-muted/5 p-4 rounded-xl border border-border">
                 <label className="flex items-center gap-3 cursor-pointer group">
                   <div className={`w-10 h-6 rounded-full p-1 transition-all flex items-center ${isAnonymous ? 'bg-foreground' : 'bg-muted border border-border'}`}>
                     <input 
@@ -161,7 +161,7 @@ export function CommentSection({ postId, initialCount }: CommentSectionProps) {
                 <Button
                   onClick={handleSubmit}
                   disabled={submitting || !newComment.trim()}
-                  className="rounded-full h-12 px-8 font-black uppercase tracking-widest text-[10px]"
+                  className="w-full sm:w-auto rounded-full h-12 px-8 font-black uppercase tracking-widest text-[10px]"
                 >
                   <Send size={14} strokeWidth={3} />
                   {submitting ? 'Syncing...' : 'Dispatch Signal'}

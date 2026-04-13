@@ -82,7 +82,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
           </div>
 
           {/* Center: Global Search (Adaptive) */}
-          <div ref={searchRef} className={`flex-1 max-w-xl relative flex items-center justify-center transition-all duration-300 ${showMobileSearch ? 'absolute inset-x-0 bg-white px-4 h-full z-10' : 'relative'}`}>
+          <div ref={searchRef} className={`flex-1 max-w-3xl relative flex items-center justify-center transition-all duration-300 ${showMobileSearch ? 'absolute inset-x-0 bg-white px-4 h-full z-10' : 'relative'}`}>
             <form onSubmit={handleSearch} className={`${showMobileSearch ? 'w-full' : 'hidden md:block'} relative`}>
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -102,31 +102,38 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
             </form>
 
             {/* Suggestions Dropdown (Shared) */}
-            {searchOpen && (suggestions.users.length > 0 || suggestions.posts.length > 0) && (
+            {searchOpen && (
               <div className="absolute top-12 left-0 right-0 bg-white border border-border rounded-2xl shadow-2xl overflow-hidden py-4 animate-reveal max-h-[80vh] overflow-y-auto">
-                 {/* ... (suggestions mapping) ... */}
-                 {suggestions.users.length > 0 && (
-                  <div className="mb-4">
-                    <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Residents</p>
-                    {suggestions.users.map(u => (
-                      <Link key={u.id} href={`/profile/${u.username}`} onClick={() => {setSearchOpen(false); setShowMobileSearch(false);}} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
-                        <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black overflow-hidden">{u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : u.username.charAt(0).toUpperCase()}</div>
-                        <span className="text-sm font-bold text-foreground group-hover:underline truncate">{u.full_name || u.username}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-                {suggestions.posts.length > 0 && (
-                  <div>
-                    <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Narratives</p>
-                    {suggestions.posts.map(p => (
-                      <Link key={p.id} href={`/post/${p.slug}`} onClick={() => {setSearchOpen(false); setShowMobileSearch(false);}} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
-                        <FileText size={16} className="text-muted-foreground shrink-0" />
-                        <span className="text-sm font-bold text-foreground group-hover:underline truncate">{p.title}</span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                 {suggestions.users.length === 0 && suggestions.posts.length === 0 ? (
+                   <div className="px-6 py-8 text-center text-muted-foreground">
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em]">Searching the Archive...</p>
+                   </div>
+                 ) : (
+                   <>
+                    {suggestions.users.length > 0 && (
+                      <div className="mb-4">
+                        <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Residents</p>
+                        {suggestions.users.map(u => (
+                          <Link key={u.id} href={`/profile/${u.username}`} onClick={() => {setSearchOpen(false); setShowMobileSearch(false);}} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
+                            <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black overflow-hidden">{u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : (u.username || 'A').charAt(0).toUpperCase()}</div>
+                            <span className="text-sm font-bold text-foreground group-hover:underline truncate">{u.full_name || u.username}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                    {suggestions.posts.length > 0 && (
+                      <div>
+                        <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Narratives</p>
+                        {suggestions.posts.map(p => (
+                          <Link key={p.id} href={`/post/${p.slug}`} onClick={() => {setSearchOpen(false); setShowMobileSearch(false);}} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
+                            <FileText size={16} className="text-muted-foreground shrink-0" />
+                            <span className="text-sm font-bold text-foreground group-hover:underline truncate">{p.title}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                   </>
+                 )}
               </div>
             )}
           </div>
@@ -147,6 +154,12 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                   <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-black rounded-full border border-white" />
                 </Link>
 
+                <Link href="/new">
+                  <Button className="rounded-full px-6 h-10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 bg-black text-white hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200">
+                    <PenTool size={14} /> Write
+                  </Button>
+                </Link>
+
                 <div className="relative hidden lg:block" ref={menuRef}>
                   <button onClick={() => setMenuOpen(!menuOpen)} className="p-1 rounded-full hover:bg-muted/50 transition-all">
                     <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black uppercase">{user.email?.charAt(0)}</div>
@@ -161,6 +174,9 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                       <div className="py-2 px-2 space-y-0.5">
                         <Link href="/profile/me" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
                           <User size={16} /> Profile
+                        </Link>
+                        <Link href="/profile/me?tab=collection" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
+                          <Bookmark size={16} /> Collection
                         </Link>
                         <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
                           <Layers size={16} /> Dashboard
@@ -208,24 +224,32 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
           <div className="flex-1 overflow-y-auto space-y-8">
             <nav className="space-y-6">
-              <Link href="/feed" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest">
+              <Link href="/feed" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black">
                 <Layers size={18} /> Archive
               </Link>
               {user && (
-                <>
-                  <Link href="/profile/me" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest">
+                <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-black">
+                  <PenTool size={18} className="text-black" strokeWidth={3} /> Write Narrative
+                </Link>
+              )}
+              {user && (
+                <div className="pt-4 space-y-6 border-t border-border/50">
+                  <Link href="/profile/me" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
                     <User size={18} /> Profile
                   </Link>
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest">
-                    <PenTool size={18} /> Dashboard
+                  <Link href="/profile/me?tab=collection" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
+                    <Bookmark size={18} /> Collection
                   </Link>
-                  <Link href="/notifications" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest">
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
+                    <Layers size={18} /> Dashboard
+                  </Link>
+                  <Link href="/notifications" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
                     <Bell size={18} /> Signals
                   </Link>
-                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest">
+                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
                     <Settings size={18} /> Protocol
                   </Link>
-                </>
+                </div>
               )}
             </nav>
           </div>

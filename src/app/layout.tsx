@@ -8,8 +8,22 @@ import { QueryProvider } from "@/providers/QueryProvider";
 
 
 export const metadata: Metadata = {
-  title: "LUMEN | Digital Narrative Platform",
+  title: {
+    template: "%s | LUMEN",
+    default: "LUMEN | Digital Narrative Platform",
+  },
   description: "A premium AI-powered space for radical thinkers to archive their luminous logs and stories.",
+  keywords: ["blogging", "AI editor", "digital narrative", "archival", "creative writing"],
+  authors: [{ name: "LUMEN Archive" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://lumen-blog.vercel.app",
+    siteName: "LUMEN",
+  },
+  verification: {
+    google: "GSC_VERIFICATION_PLACEHOLDER_ADD_YOUR_CODE_HERE",
+  },
 };
 
 

@@ -21,7 +21,7 @@ interface FeedFilterProps {
 
 export function FeedFilter({ activeType, onChange }: FeedFilterProps) {
   return (
-    <div className="flex items-center gap-1 p-1 bg-zinc-50 rounded-2xl border border-zinc-100">
+    <div className="flex items-center gap-1 p-1 bg-zinc-50 rounded-2xl border border-zinc-100 overflow-x-auto no-scrollbar scroll-smooth flex-nowrap">
       {FILTERS.map((filter) => {
         const Icon = filter.icon;
         const active = activeType === filter.type;
@@ -29,11 +29,10 @@ export function FeedFilter({ activeType, onChange }: FeedFilterProps) {
           <button
             key={filter.label}
             onClick={() => onChange(filter.type)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
-              active
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${active
                 ? 'bg-white text-zinc-900 shadow-sm border border-zinc-200'
                 : 'text-zinc-500 hover:text-zinc-700 hover:bg-white/50'
-            }`}
+              }`}
           >
             <Icon size={16} />
             <span className="hidden sm:inline">{filter.label}</span>

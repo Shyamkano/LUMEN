@@ -13,23 +13,35 @@ export default async function SearchPage({
   const decodedQuery = decodeURIComponent(query || '');
 
   const supabase = await createClient();
+  const { data: { user: currentUser } } = await supabase.auth.getUser();
 
   // Sanitized query for array matching
   const queryArray = decodedQuery.split(/\s+/).filter(Boolean);
 
-  // 1. Search for Posts
+  // 1. Search for Posts with counts
   let postsQuery = supabase
     .from('posts')
-    .select('*')
+    .select('*, likes_count:likes(count), comments_count:comments(count)')
     .eq('status', 'published');
 
   if (decodedQuery) {
+    const filters = [];
+    
+    // Add exact match for the whole string (case insensitive)
+    filters.push(`title.ilike.%${decodedQuery}%`);
+    
+    // Add keyword matches for each word
     if (queryArray.length > 0) {
-      // Create a complex OR filter:
-      // Title matches query OR tags overlap with query words
-      postsQuery = postsQuery.or(`title.ilike.%${decodedQuery}%, tags.ov.{${queryArray.join(',')}}`);
-    } else {
-      postsQuery = postsQuery.ilike('title', `%${decodedQuery}%`);
+      queryArray.forEach(word => {
+        if (word.length > 1) { // Only fuzzy small words if they have meaning
+          filters.push(`title.ilike.%${word}%`);
+          filters.push(`tags.ov.{${word}}`);
+        }
+      });
+    }
+
+    if (filters.length > 0) {
+      postsQuery = postsQuery.or(filters.join(','));
     }
   }
 
@@ -47,12 +59,39 @@ export default async function SearchPage({
   let postsWithProfiles = [];
   if (posts && posts.length > 0) {
     const authorIds = [...new Set(posts.map(p => p.author_id))];
-    const { data: postAuthorProfiles } = await supabase.from('profiles').select('*').in('id', authorIds);
+    const postIds = posts.map(p => p.id);
+    
+    const [
+      { data: postAuthorProfiles },
+      { data: followingData },
+      { data: likesData },
+      { data: commentsData }
+    ] = await Promise.all([
+      supabase.from('profiles').select('*').in('id', authorIds),
+      supabase
+        .from('followers')
+        .select('following_id')
+        .eq('follower_id', currentUser?.id)
+        .in('following_id', authorIds),
+      supabase.from('likes').select('post_id').in('post_id', postIds),
+      supabase.from('comments').select('post_id').in('post_id', postIds)
+    ]);
+    
+    const followingSet = new Set((followingData || []).map(f => f.following_id));
     const profileMap = new Map((postAuthorProfiles || []).map(p => [p.id, p]));
+    
+    // Process likes and comments counts
+    const likesCount: Record<string, number> = {};
+    (likesData || []).forEach((l: any) => { likesCount[l.post_id] = (likesCount[l.post_id] || 0) + 1; });
+    const commentsCount: Record<string, number> = {};
+    (commentsData || []).forEach((c: any) => { commentsCount[c.post_id] = (commentsCount[c.post_id] || 0) + 1; });
     
     postsWithProfiles = posts.map(post => ({
       ...post,
-      profile: profileMap.get(post.author_id) || null
+      profile: profileMap.get(post.author_id) || null,
+      isFollowing: followingSet.has(post.author_id),
+      likes_count: likesCount[post.id] || 0,
+      comments_count: commentsCount[post.id] || 0
     }));
   }
 
