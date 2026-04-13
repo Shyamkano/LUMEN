@@ -16,6 +16,9 @@ type AIAction =
   | 'transcribe_summary';
 
 export async function POST(request: NextRequest) {
+  let prompt = '';
+  let expectJson = false;
+
   try {
     const { action, content, code, language, title } = await request.json() as {
       action: AIAction;
@@ -30,9 +33,6 @@ export async function POST(request: NextRequest) {
     }
 
     const mistral = getMistral();
-
-    let prompt: string;
-    let expectJson = false;
 
     switch (action) {
       case 'generate_titles':
