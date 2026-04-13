@@ -30,11 +30,14 @@ export function ImageUploader({ imageUrl, onUpload, onRemove, label = 'Add Cover
         body: formData,
       });
 
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
       const data = await res.json();
       onUpload(data.url);
-    } catch (error) {
-      alert('Failed to upload image');
+    } catch (error: any) {
+      alert(`Failed to upload image: ${error.message}`);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

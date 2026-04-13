@@ -73,12 +73,15 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
         body: formData,
       });
 
-      if (!res.ok) throw new Error('Upload failed');
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Upload failed');
+      }
       const data = await res.json();
       (editor.chain().focus() as any).setImage({ src: data.url }).run();
       setShowImageModal(false);
-    } catch (err) {
-      alert('Upload failed');
+    } catch (err: any) {
+      alert(`Upload failed: ${err.message}`);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

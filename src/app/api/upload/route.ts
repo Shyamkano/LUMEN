@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file type
-    const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/avif'];
     const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/mp4', 'audio/webm'];
     const allowedTypes = bucket === 'audio-posts' ? allowedAudioTypes : allowedImageTypes;
 
@@ -36,9 +36,13 @@ export async function POST(request: NextRequest) {
     const ext = file.name.split('.').pop();
     const fileName = `${user.id}/${Date.now()}.${ext}`;
 
+    // Convert File to Buffer for Supabase upload
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
     const { data, error } = await supabase.storage
       .from(bucket)
-      .upload(fileName, file, {
+      .upload(fileName, buffer, {
         contentType: file.type,
         upsert: false,
       });
