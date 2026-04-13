@@ -27,9 +27,9 @@ export default async function FeedPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 relative py-12 md:py-20 overflow-x-hidden">
       {/* Mobile Floating Action Button (FAB) */}
-      <Link href="/new" className="md:hidden fixed bottom-8 right-6 z-[90] w-14 h-14 bg-black text-white rounded-full flex items-center justify-center shadow-2xl shadow-black/40 border border-white/20 active:scale-90 transition-all animate-reveal">
+      {/* <Link href="/new" className="md:hidden fixed bottom-8 right-6 z-[90] w-14 h-14 bg-black text-white rounded-full flex items-center justify-center shadow-2xl shadow-black/40 border border-white/20 active:scale-90 transition-all animate-reveal">
         <PenTool size={22} strokeWidth={3} />
-      </Link>
+      </Link> */}
       {/* Background Glows for 'Shine' */}
       <div className="absolute -top-24 -left-24 w-64 md:w-96 h-64 md:h-96 bg-foreground/5 blur-[120px] rounded-full pointer-events-none animate-pulse" />
       <div className="absolute top-1/2 -right-24 w-48 md:w-64 h-48 md:h-64 bg-foreground/5 blur-[100px] rounded-full pointer-events-none" />

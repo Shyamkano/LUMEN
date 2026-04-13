@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://lumen-blog.vercel.app",
+    url: "https://lumen-archive.vercel.app",
     siteName: "LUMEN",
   },
   verification: {
