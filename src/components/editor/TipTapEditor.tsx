@@ -62,7 +62,7 @@ const CustomMention = Mention.extend({
 
 
 interface TipTapEditorProps {
-  editor?: ReturnType<typeof useEditor> | null;
+  editor: ReturnType<typeof useEditor> | null;
   content?: Record<string, unknown> | null;
   onChange?: (content: Record<string, unknown>) => void;
   placeholder?: string;
