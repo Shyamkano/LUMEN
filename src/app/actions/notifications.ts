@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 
-export type NotificationType = 'like' | 'comment' | 'follow' | 'mention' | 'reply' | 'system';
+export type NotificationType = 'like' | 'comment' | 'follow' | 'mention' | 'reply' | 'system' | 'post';
 
 export async function getNotifications() {
   const supabase = await createClient();
