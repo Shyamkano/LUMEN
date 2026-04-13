@@ -67,6 +67,7 @@ export interface AnonymousIdentity {
   user_id: string;
   alias_name: string;
   avatar_seed: string;
+  district: string;
   created_at: string;
 }
 
