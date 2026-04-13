@@ -6,9 +6,9 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code');
   const error_desc = requestUrl.searchParams.get('error_description');
   const error_code = requestUrl.searchParams.get('error_code');
-  const nextParam = requestUrl.searchParams.get('next') ?? '/';
+  const nextParam = requestUrl.searchParams.get('next') ?? '/feed';
   // Security: Prevent open redirects by ensuring the path is internal
-  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/';
+  const next = nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/feed';
   const origin = requestUrl.origin;
 
 

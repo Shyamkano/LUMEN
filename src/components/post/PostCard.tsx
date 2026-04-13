@@ -41,7 +41,13 @@ export function PostCard({ post }: { post: Post }) {
                 ? 'bg-foreground text-background'
                 : 'bg-muted/10 text-foreground'
             }`}>
-              {post.is_anonymous ? '?' : (
+              {post.is_anonymous ? (
+                <img 
+                  src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`} 
+                  alt="" 
+                  className="w-full h-full object-cover invert" 
+                />
+              ) : (
                 post.profile?.avatar_url
                   ? <img src={post.profile.avatar_url} alt="" className="w-full h-full object-cover" />
                   : authorInitial

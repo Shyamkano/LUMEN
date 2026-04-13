@@ -2,10 +2,21 @@ import Link from 'next/link';
 import { Button } from '@/components/ui';
 import { PenTool, Zap, Code } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export default async function LandingPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+
+  // Mobile detection
+  const headersList = await headers();
+  const userAgent = headersList.get('user-agent') || '';
+  const isMobile = /mobile|android|iphone|ipad|phone/i.test(userAgent);
+
+  if (isMobile || user) {
+    redirect('/feed');
+  }
 
   return (
     <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto px-6 relative flex flex-col justify-center overflow-hidden">

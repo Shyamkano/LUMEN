@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { createNotification } from './notifications';
 
 /**
  * Toggles follow status for a user.
@@ -46,6 +47,9 @@ export async function toggleFollow(followingId: string) {
     
     if (error) return { error: error.message };
     
+    // Trigger notification
+    await createNotification(followingId, user.id, 'follow');
+
     revalidatePath(`/profile/${followingId}`);
     return { following: true };
   }

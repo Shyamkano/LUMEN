@@ -59,17 +59,17 @@ export default async function SearchPage({
   const hasResults = postsWithProfiles.length > 0 || (profiles && profiles.length > 0);
 
   return (
-    <div className="max-w-screen-xl mx-auto px-6 py-20 min-h-screen animate-reveal">
-      <div className="max-w-screen-md mx-auto space-y-4 mb-20">
+    <div className="max-w-screen-xl mx-auto px-4 md:px-6 py-12 md:py-20 min-h-screen animate-reveal overflow-x-hidden">
+      <div className="max-w-screen-md mx-auto space-y-3 md:space-y-4 mb-12 md:mb-20">
         <div className="flex items-center gap-4">
-          <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground border border-border px-4 py-1.5 rounded-full">
+          <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground border border-border px-3 py-1 rounded-full">
             Inquiry Protocol
           </span>
         </div>
-        <h1 className="text-7xl font-black text-foreground tracking-tighter leading-tight">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-foreground tracking-tighter leading-[1.1] break-words">
           Analysis: "{decodedQuery}"
         </h1>
-        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+        <p className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-muted-foreground">
           {(posts?.length || 0) + (profiles?.length || 0)} relative matches indexed
         </p>
         {(postError || profileError) && (

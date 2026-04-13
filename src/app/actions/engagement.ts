@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { createNotification } from './notifications';
 
 export async function toggleLike(postId: string) {
   const supabase = await createClient();
@@ -29,6 +30,13 @@ export async function toggleLike(postId: string) {
       user_id: user.id,
     }]);
     if (error) return { error: error.message };
+
+    // Trigger notification
+    const { data: post } = await supabase.from('posts').select('author_id').eq('id', postId).single();
+    if (post) {
+      await createNotification(post.author_id, user.id, 'like', postId);
+    }
+
     revalidatePath('/');
     return { liked: true };
   }

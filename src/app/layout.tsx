@@ -25,7 +25,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-white text-black selection:bg-black selection:text-white" suppressHydrationWarning>
+      <body className="min-h-screen bg-white text-black selection:bg-black selection:text-white antialiased overflow-x-hidden" suppressHydrationWarning>
         <QueryProvider>
           <Navbar user={user} />
           <main className="pt-20 pb-16">

@@ -48,3 +48,46 @@ export async function getSearchSuggestions(query: string) {
   };
 }
 
+export async function getPreferences() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from('notification_settings')
+    .select('*')
+    .eq('user_id', user.id)
+    .single();
+
+  return data || {
+    email_signals: true,
+    push_signals: false,
+    mentions: true,
+    network_updates: true,
+    high_contrast: true,
+    motion_reduction: false
+  };
+}
+
+export async function updatePreferences(prefs: any) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Auth required' };
+
+  const { error } = await supabase
+    .from('notification_settings')
+    .upsert({
+      user_id: user.id,
+      ...prefs,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+
+  if (error) {
+    console.error('Preference update failed:', error);
+    return { error: error.message };
+  }
+
+  return { success: true };
+}
+
+

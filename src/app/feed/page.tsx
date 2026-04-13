@@ -25,17 +25,17 @@ export default async function FeedPage() {
   const remainingTags = popularTags.slice(7);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 relative">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 relative py-12 md:py-20 overflow-x-hidden">
       {/* Background Glows for 'Shine' */}
-      <div className="absolute -top-24 -left-24 w-96 h-96 bg-foreground/5 blur-[120px] rounded-full pointer-events-none animate-pulse" />
-      <div className="absolute top-1/2 -right-24 w-64 h-64 bg-foreground/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute -top-24 -left-24 w-64 md:w-96 h-64 md:h-96 bg-foreground/5 blur-[120px] rounded-full pointer-events-none animate-pulse" />
+      <div className="absolute top-1/2 -right-24 w-48 md:w-64 h-48 md:h-64 bg-foreground/5 blur-[100px] rounded-full pointer-events-none" />
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-16 relative py-12">
-        <div className="space-y-12">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 md:gap-16 relative py-8 md:py-12">
+        <div className="space-y-10 md:space-y-12">
           {/* Compressed Feed Header */}
           <header className="animate-reveal">
             <div className="flex items-center gap-4 mb-2 overflow-hidden">
-              <h1 className="text-4xl md:text-5xl font-black text-foreground tracking-tighter">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tighter leading-tight break-words">
                 Dialogue <span className="italic font-light opacity-60">& Archive.</span>
               </h1>
             </div>
@@ -110,7 +110,7 @@ export default async function FeedPage() {
           </div>
 
           <div className="pt-8 border-t border-border">
-            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6">Explore Topics</h3>
+            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6">Archive Topics</h3>
             <div className="flex flex-wrap gap-2">
               {trendingTags.map(tag => (
                 <Link key={tag} href={`/feed?tag=${encodeURIComponent(tag)}`} className="px-3 py-1.5 rounded-full bg-muted/5 hover:bg-foreground hover:text-background text-foreground text-[10px] font-black uppercase tracking-wider transition-all border border-border">

@@ -22,6 +22,7 @@ import { FollowButton } from '@/components/social/FollowButton';
 import { createClient } from '@/lib/supabase/server';
 import { AudioPlayer } from '@/components/audio/AudioPlayer';
 import type { Metadata } from 'next';
+import { ReadingProgressBar } from '@/components/post/ReadingProgressBar';
 
 import { mergeAttributes } from '@tiptap/core';
 
@@ -173,20 +174,21 @@ export default async function PostPage({ params }: PostPageProps) {
 
 
   return (
-    <main className="min-h-screen bg-white text-black">
+    <main className="min-h-screen bg-white text-black overflow-x-hidden">
+      <ReadingProgressBar />
 
       {/* Sidebar-like layout for large screens */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-16 px-6 py-20">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 md:gap-16 px-4 md:px-6 py-12 md:py-20">
 
-        <article className="max-w-screen-md mx-auto w-full animate-reveal">
+        <article className="max-w-screen-md mx-auto w-full animate-reveal px-2 md:px-0">
           {/* Top Metadata */}
-          <div className="flex items-center justify-between gap-4 mb-12">
+          <div className="flex items-center justify-between gap-4 mb-8 md:mb-12">
             <div className="flex items-center gap-4">
-              <Link href="/feed" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/feed" className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
                 Archive
               </Link>
               <span className="text-border">/</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground">
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-foreground">
                 {post.type}
               </span>
             </div>
@@ -212,7 +214,7 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
 
 
-          <h1 className="text-4xl md:text-6xl font-black mb-10 leading-[1.05] text-foreground tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-8 md:mb-10 leading-[1.05] text-foreground tracking-tight">
             {post.title}
           </h1>
 
@@ -221,8 +223,12 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="flex items-center gap-6 py-10 mb-16 border-y border-border">
             {post.is_anonymous ? (
               <Link href={`/alias/${encodeURIComponent(post.anonymous_identity?.alias_name || '')}`} className="shrink-0">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-foreground text-background hover:scale-105 transition-transform shadow-lg shadow-foreground/5">
-                  ?
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-black hover:scale-105 transition-transform shadow-lg shadow-foreground/5">
+                  <img 
+                    src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`}
+                    className="w-full h-full object-cover invert"
+                    alt=""
+                  />
                 </div>
               </Link>
             ) : (
@@ -288,19 +294,17 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Content */}
           {html && (
-            // Inside your return JSX...
             <div
               className="reading-content ProseMirror prose prose-zinc max-w-none 
+    prose-p:text-zinc-800 prose-p:leading-[1.8] prose-p:text-base md:prose-p:text-lg
     prose-headings:font-black prose-headings:tracking-tighter
     prose-strong:text-foreground prose-strong:font-black
-    prose-blockquote:border-foreground prose-blockquote:font-serif prose-blockquote:italic
-    /* Improved pre/code styling */
+    prose-blockquote:border-foreground prose-blockquote:font-serif prose-blockquote:italic prose-blockquote:text-lg
     prose-pre:bg-[#0d1117] prose-pre:border prose-pre:border-border prose-pre:rounded-2xl
-    prose-pre:p-0 /* Let the 'code' tag handle padding if needed or keep it here */
-    prose-img:rounded-3xl prose-img:border prose-img:border-border lg:prose-xl"
+    prose-pre:p-0
+    prose-img:rounded-3xl prose-img:border prose-img:border-border lg:prose-xl selection:bg-black selection:text-white"
               dangerouslySetInnerHTML={{ __html: html }}
             />
-
           )}
 
           {/* Code Snippets */}
@@ -346,8 +350,14 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="space-y-8">
             <div className="w-24 h-24 rounded-full border-2 border-border p-1">
               <div className="w-full h-full rounded-full overflow-hidden bg-muted/10 flex items-center justify-center font-black text-3xl border border-border">
-                {post.profile?.avatar_url ? (
-                  <img src={post.profile.avatar_url} className="w-full h-full object-cover" />
+                {post.is_anonymous ? (
+                  <img 
+                    src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`}
+                    className="w-full h-full object-cover invert"
+                    alt=""
+                  />
+                ) : post.profile?.avatar_url ? (
+                  <img src={post.profile.avatar_url} className="w-full h-full object-cover" alt="" />
                 ) : (
                   authorName.charAt(0).toUpperCase()
                 )}

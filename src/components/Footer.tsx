@@ -10,12 +10,12 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-white border-t border-border py-20 md:py-32 px-6 mt-40">
+    <footer className="bg-white border-t border-border py-20 md:py-32 px-4 md:px-6 mt-40">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] gap-12 md:gap-20 pb-20">
+        <div className="grid grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-x-8 gap-y-12 lg:gap-20 pb-20">
           {/* Brand Column */}
-          <div className="space-y-8 md:space-y-10">
-            <Link href="/" className="text-3xl md:text-4xl font-black tracking-tighter uppercase">
+          <div className="col-span-2 lg:col-span-1 space-y-8 md:space-y-10 mb-8 lg:mb-0">
+            <Link href="/feed" className="text-3xl md:text-4xl font-black tracking-tighter uppercase">
               LUMEN
             </Link>
             <p className="text-muted-foreground text-sm font-medium leading-relaxed max-w-sm">
@@ -40,7 +40,7 @@ export default function Footer() {
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-black">Network</h4>
             <div className="flex flex-col gap-3 md:gap-4 text-xs font-bold text-muted-foreground">
               <Link href="/feed" className="hover:text-black transition-colors">Archive</Link>
-              <Link href="/" className="hover:text-black transition-colors">Manifesto</Link>
+              <Link href="/feed" className="hover:text-black transition-colors">Manifesto</Link>
               <Link href="/search" className="hover:text-black transition-colors">Discovery</Link>
             </div>
           </div>
@@ -56,7 +56,7 @@ export default function Footer() {
           </div>
 
           {/* Action */}
-          <div className="space-y-6 md:space-y-8">
+          <div className="col-span-2 lg:col-span-1 space-y-6 md:space-y-8 pt-8 lg:pt-0 border-t lg:border-t-0 border-border/50">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-black">Control</h4>
             <button
               onClick={scrollToTop}

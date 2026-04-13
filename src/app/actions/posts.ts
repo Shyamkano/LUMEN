@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { createNotification } from './notifications';
 import slugify from 'slugify';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateReadTime } from '@/lib/utils';
@@ -130,6 +131,14 @@ export async function createPost(formData: {
     title: finalTitle,
     version_num: 1,
   }]);
+
+  // Notify followers
+  const { data: followers } = await supabase.from('followers').select('follower_id').eq('following_id', user.id);
+  if (followers && followers.length > 0) {
+    for (const f of followers) {
+      await createNotification(f.follower_id, user.id, 'post', post.id);
+    }
+  }
 
   revalidatePath('/');
   revalidatePath('/feed');
@@ -356,14 +365,17 @@ export async function getPosts(options?: {
       const author = profileMap.get(post.author_id);
       return author && !author.is_banned;
     })
-    .map(post => ({
-      ...post,
-      author_id: post.is_anonymous ? 'HIDDEN' : post.author_id,
-      profile: post.is_anonymous ? null : (profileMap.get(post.author_id) || null),
-      anonymous_identity: post.is_anonymous ? (anonMap.get(post.author_id) || null) : null,
-      likes_count: likesCount[post.id] || 0,
-      comments_count: commentsCount[post.id] || 0,
-    }));
+    .map(post => {
+      const originalAuthorId = post.author_id;
+      return {
+        ...post,
+        author_id: post.is_anonymous ? 'HIDDEN' : originalAuthorId,
+        profile: post.is_anonymous ? null : (profileMap.get(originalAuthorId) || null),
+        anonymous_identity: post.is_anonymous ? (anonMap.get(originalAuthorId) || null) : null,
+        likes_count: likesCount[post.id] || 0,
+        comments_count: commentsCount[post.id] || 0,
+      };
+    });
 }
 
 export async function getPostBySlug(slug: string) {
@@ -492,14 +504,17 @@ export async function getPostsByUsername(username: string) {
     anonMap = new Map((identities || []).map(i => [i.user_id, i]));
   }
 
-  const hydratedPosts = posts.map(post => ({
-    ...post,
-    author_id: post.is_anonymous ? 'HIDDEN' : post.author_id,
-    profile: post.is_anonymous ? null : profile,
-    anonymous_identity: post.is_anonymous ? (anonMap.get(profile.id) || null) : null,
-    likes_count: likesCount[post.id] || 0,
-    comments_count: commentsCount[post.id] || 0,
-  }));
+  const hydratedPosts = posts.map(post => {
+    const originalAuthorId = post.author_id;
+    return {
+      ...post,
+      author_id: post.is_anonymous ? 'HIDDEN' : originalAuthorId,
+      profile: post.is_anonymous ? null : profile,
+      anonymous_identity: post.is_anonymous ? (anonMap.get(originalAuthorId) || null) : null,
+      likes_count: likesCount[post.id] || 0,
+      comments_count: commentsCount[post.id] || 0,
+    };
+  });
 
   return { posts: hydratedPosts, profile };
 }
@@ -610,11 +625,12 @@ export async function getTrendingPosts() {
   return posts
     .map(post => {
       const isAnon = post.is_anonymous;
+      const originalAuthorId = post.author_id;
       return {
         ...post,
-        author_id: isAnon ? 'HIDDEN' : post.author_id,
-        profile: isAnon ? null : (profileMap.get(post.author_id) || null),
-        anonymous_identity: isAnon ? (anonMap.get(post.author_id) || null) : null,
+        author_id: isAnon ? 'HIDDEN' : originalAuthorId,
+        profile: isAnon ? null : (profileMap.get(originalAuthorId) || null),
+        anonymous_identity: isAnon ? (anonMap.get(originalAuthorId) || null) : null,
         likes_count: likesCount[post.id] || 0,
       };
     })

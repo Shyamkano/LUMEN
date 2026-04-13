@@ -54,15 +54,15 @@ export default async function DashboardPage() {
     .filter(Boolean);
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20 min-h-screen animate-reveal">
-      <div className="flex flex-col gap-4 mb-20">
-        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground border border-border w-fit px-4 py-1.5 rounded-full">
+    <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-20 min-h-screen animate-reveal overflow-x-hidden">
+      <div className="flex flex-col gap-3 md:gap-4 mb-12 md:mb-20">
+        <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground border border-border w-fit px-3 py-1 rounded-full">
           Control Interface
         </span>
-        <h1 className="text-7xl font-black text-foreground tracking-tighter leading-tight">
+        <h1 className="text-3xl sm:text-5xl md:text-7xl font-black text-foreground tracking-tighter leading-[1.1] break-words">
           Dashboard
         </h1>
-        <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">
+        <p className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-widest max-w-md">
           Manage your digital narratives and synchronization logs.
         </p>
       </div>

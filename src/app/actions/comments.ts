@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { createNotification } from './notifications';
 
 export async function getComments(postId: string) {
   const supabase = await createClient();
@@ -79,6 +80,20 @@ export async function addComment(postId: string, content: string, parentId?: str
   }]);
 
   if (error) return { error: error.message };
+
+  // Trigger Notifications
+  const { data: post } = await supabase.from('posts').select('author_id').eq('id', postId).single();
+  
+  if (parentId) {
+    // Reply notification
+    const { data: parentComment } = await supabase.from('comments').select('user_id').eq('id', parentId).single();
+    if (parentComment) {
+      await createNotification(parentComment.user_id, user.id, 'reply', postId);
+    }
+  } else if (post) {
+    // Comment on post notification
+    await createNotification(post.author_id, user.id, 'comment', postId);
+  }
 
   revalidatePath('/', 'layout');
   return { success: true };

@@ -21,7 +21,7 @@ export async function login(formData: FormData): Promise<{ error: string } | nev
   }
 
   revalidatePath('/', 'layout');
-  redirect('/');
+  redirect('/feed');
 }
 
 export async function signup(formData: FormData): Promise<{ error: string } | never> {
@@ -71,7 +71,7 @@ export async function signup(formData: FormData): Promise<{ error: string } | ne
   }
 
   revalidatePath('/', 'layout');
-  redirect('/');
+  redirect('/feed');
 }
 
 export async function logout() {
@@ -97,6 +97,27 @@ export async function signInWithGoogle() {
   if (data.url) {
     redirect(data.url);
   }
+}import { createAdminClient } from '@/lib/supabase/admin';
+
+export async function deleteAccount() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: 'Access Denied: Unidentified registry entry.' };
+
+  const adminClient = await createAdminClient();
+  
+  // 1. Delete user from auth (this should cascade to profiles if configured, but we'll be explicit)
+  const { error } = await adminClient.auth.admin.deleteUser(user.id);
+
+  if (error) {
+    console.error('Account termination failure:', error);
+    return { error: 'Protocol Failure: Could not terminate account.' };
+  }
+
+  // 2. Clear session
+  await supabase.auth.signOut();
+  
+  revalidatePath('/', 'layout');
+  redirect('/');
 }
-
-

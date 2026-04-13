@@ -1,130 +1,64 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { createClient } from '@/lib/supabase/client';
-import { Button, Input } from '@/components/ui';
-import { ImageUploader } from '@/components/editor/ImageUploader';
-import { Loader2, Save, X, CheckCircle, AlertCircle, Sparkles } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui';
+import { 
+  User, 
+  Shield, 
+  Bell, 
+  LogOut, 
+  ChevronRight, 
+  Sparkles, 
+  Layers, 
+  Eye, 
+  Globe 
+} from 'lucide-react';
+import Link from 'next/link';
+import { logout, deleteAccount } from '@/app/auth/actions';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AlertTriangle, XCircle, Trash2, X } from 'lucide-react';
 
-export default function SettingsPage() {
-  const { user, profile } = useAuth();
-  const supabase = createClient();
-  const router = useRouter();
-  
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [notification, setNotification] = useState<{
-    show: boolean;
-    type: 'success' | 'error';
-    message: string;
-  }>({ show: false, type: 'success', message: '' });
+export default function SettingsHubPage() {
+  const { user, profile, loading } = useAuth();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const [formData, setFormData] = useState({
-    full_name: '',
-    username: '',
-    bio: '',
-    website: '',
-    twitter: '',
-  });
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [anonIdentity, setAnonIdentity] = useState({
-    alias_name: '',
-    avatar_seed: '',
-  });
-
-  useEffect(() => {
-    async function loadAnon() {
-      if (user) {
-        const { data } = await supabase
-          .from('anonymous_identities')
-          .select('alias_name, avatar_seed')
-          .eq('user_id', user.id)
-          .single();
-        if (data) setAnonIdentity(data);
-      }
-    }
-
-    if (profile) {
-      setFormData({
-        full_name: profile.full_name || '',
-        username: profile.username || '',
-        bio: profile.bio || '',
-        website: profile.website || '',
-        twitter: profile.twitter || '',
-      });
-      setAvatarUrl(profile.avatar_url || null);
-      setLoading(false);
-      loadAnon();
-    }
-  }, [profile, user, supabase]);
-
-  if (!user || loading) {
+  if (loading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <Loader2 className="animate-spin text-zinc-400" size={32} />
+        <div className="w-8 h-8 border-4 border-foreground/10 border-t-foreground rounded-full animate-spin" />
       </div>
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    
-    if (formData.username.includes(' ')) {
-      setNotification({ show: true, type: 'error', message: 'Username cannot contain spaces.' });
-      setSaving(false);
-      return;
-    }
+  if (!user) {
+    return null;
+  }
 
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        ...formData,
-        avatar_url: avatarUrl,
-      })
-      .eq('id', user.id);
-
-    if (anonIdentity.alias_name) {
-      await supabase
-        .from('anonymous_identities')
-        .upsert({
-          user_id: user.id,
-          alias_name: anonIdentity.alias_name,
-          avatar_seed: anonIdentity.avatar_seed || 'default',
-        }, { onConflict: 'user_id' });
-    }
-
-    setSaving(false);
-
-    if (profileError) {
-      setNotification({ show: true, type: 'error', message: profileError.message });
-    } else {
-      setNotification({ show: true, type: 'success', message: 'Network identity updated successfully.' });
-      router.refresh();
-      // Auto-hide success after 3 seconds
-      setTimeout(() => setNotification(prev => ({ ...prev, show: false })), 3000);
-    }
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== 'DELETE') return;
+    setIsDeleting(true);
+    await deleteAccount();
+    // Redirect happens in action
   };
 
-  const modalContent = notification.show && (typeof document !== 'undefined') && createPortal(
+  const deleteModal = showDeleteModal && createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-in fade-in duration-500" 
-        onClick={() => setNotification({ ...notification, show: false })}
+        className="fixed inset-0 bg-black/80 backdrop-blur-md animate-in fade-in duration-500" 
+        onClick={() => !isDeleting && setShowDeleteModal(false)}
       />
-      <div className="relative bg-white rounded-[3rem] border border-zinc-100 shadow-[0_32px_128px_rgba(0,0,0,0.2)] p-10 max-w-sm w-full space-y-8 animate-in zoom-in-95 duration-300">
+      <div className="relative bg-white rounded-[3rem] p-10 max-w-md w-full space-y-8 animate-in zoom-in-95 duration-300 border border-red-100 shadow-[0_32px_128px_rgba(255,0,0,0.1)]">
         <div className="flex justify-between items-start">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
-            notification.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
-          }`}>
-            {notification.type === 'success' ? <CheckCircle size={28} /> : <AlertCircle size={28} />}
+          <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center">
+            <Trash2 size={32} />
           </div>
           <button 
-            onClick={() => setNotification({ ...notification, show: false })}
-            className="p-2 hover:bg-zinc-50 rounded-full transition-all"
+            disabled={isDeleting}
+            onClick={() => setShowDeleteModal(false)}
+            className="p-2 hover:bg-zinc-100 rounded-full transition-all"
           >
             <X size={20} className="text-zinc-400" />
           </button>
@@ -132,192 +66,146 @@ export default function SettingsPage() {
 
         <div className="space-y-4">
           <h3 className="text-3xl font-black tracking-tighter uppercase text-zinc-900 leading-none">
-            System<br/>Update
+            Terminate<br/>Identity?
           </h3>
-          <p className="text-[10px] font-black leading-relaxed uppercase tracking-[0.2em] text-zinc-400">
-            Internal protocol status
+          <p className="text-[10px] font-black leading-relaxed uppercase tracking-[0.2em] text-red-600">
+            Irreversible Protocol Action
           </p>
-          <div className={`h-px w-10 ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`} />
           <p className="text-sm text-zinc-600 font-medium leading-relaxed">
-            {notification.message}
+            This will permanently erase your archive, narratives, and synchronization data. Access to this coordinate cannot be restored.
           </p>
         </div>
 
-        <Button 
-          onClick={() => setNotification({ ...notification, show: false })}
-          className={`w-full font-black uppercase tracking-widest text-[10px] h-12 rounded-full border-none shadow-none ${
-            notification.type === 'success' 
-            ? 'bg-zinc-900 text-white hover:bg-black' 
-            : 'bg-red-600 text-white hover:bg-red-700'
-          }`}
-        >
-          Confirm Status
-        </Button>
+        <div className="space-y-3 pt-4">
+          <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Type "DELETE" to confirm</label>
+          <input 
+            value={deleteConfirmText}
+            onChange={(e) => setDeleteConfirmText(e.target.value)}
+            placeholder="DELETE"
+            className="w-full h-14 bg-zinc-50 border border-zinc-200 rounded-2xl px-5 text-sm font-black tracking-widest outline-none focus:border-red-500 transition-all uppercase"
+          />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <Button 
+            onClick={handleDeleteAccount}
+            disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+            className="w-full h-14 rounded-full bg-red-600 text-white font-black uppercase tracking-widest text-[10px] hover:bg-red-700 disabled:opacity-30 disabled:grayscale transition-all"
+          >
+            {isDeleting ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Termination'}
+          </Button>
+          <Button 
+            variant="ghost" 
+            disabled={isDeleting}
+            onClick={() => setShowDeleteModal(false)}
+            className="text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-zinc-600"
+          >
+            Abort Action
+          </Button>
+        </div>
       </div>
     </div>,
     document.body
   );
+  const sections = [
+    {
+      title: "Public Identity",
+      description: "Manage your visible profile, avatar, and social nodes.",
+      href: "/settings/profile",
+      icon: User,
+      color: "bg-blue-50 text-blue-600"
+    },
+    {
+      title: "Shadow Identity",
+      description: "Configure your anonymous alias and private signals.",
+      href: "/settings/shadow",
+      icon: Shield,
+      color: "bg-purple-50 text-purple-600"
+    },
+    {
+      title: "Signal Protocol",
+      description: "Notification preferences and network activity alerts.",
+      href: "/settings/notifications",
+      icon: Bell,
+      color: "bg-amber-50 text-amber-600"
+    },
+    {
+      title: "Network Presence",
+      description: "Theme preferences and accessibility parameters.",
+      href: "/settings/preferences",
+      icon: Layers,
+      color: "bg-emerald-50 text-emerald-600"
+    }
+  ];
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-20 animate-fade-in">
-      {modalContent}
-      <div className="flex flex-col gap-2 mb-12">
-        <div className="flex items-center gap-4 mb-2">
-          <div className="w-8 h-8 rounded-full bg-foreground flex items-center justify-center text-background">
-            <Sparkles size={16} />
+    <div className="max-w-4xl mx-auto px-6 py-10 md:py-20 animate-reveal">
+      {deleteModal}
+      <div className="flex flex-col gap-3 md:gap-4 mb-12 md:mb-20">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-6 h-6 rounded-full bg-foreground flex items-center justify-center text-background">
+            <Sparkles size={12} />
           </div>
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Network Environment</p>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">System Manifest</p>
         </div>
-        <h1 className="text-6xl font-black tracking-tighter text-foreground uppercase leading-none">Configuration</h1>
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter text-foreground uppercase leading-none">Settings</h1>
       </div>
 
-      
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-12">
-        <form onSubmit={handleSubmit} className="space-y-12">
-          
-          <div className="p-10 rounded-[3rem] bg-card border border-border space-y-12">
-            <h2 className="text-sm font-black uppercase tracking-[0.4em] text-foreground border-b border-border pb-6 flex items-center gap-4">
-              <span className="w-2 h-2 rounded-full bg-foreground" />
-              Primary Profile
-            </h2>
-
-            {/* Avatar Upload */}
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Visual Signature</label>
-              <div className="max-w-[200px]">
-                <ImageUploader 
-                  imageUrl={avatarUrl} 
-                  onUpload={setAvatarUrl} 
-                  onRemove={() => setAvatarUrl(null)} 
-                  label="Update Portrait"
-                />
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+        {sections.map((section) => (
+          <Link 
+            key={section.title} 
+            href={section.href}
+            className="group p-6 md:p-8 rounded-[2rem] md:rounded-[3rem] bg-white border border-border hover:border-foreground transition-all flex flex-col justify-between h-auto md:h-64 hover:shadow-2xl hover:shadow-foreground/5"
+          >
+            <div className="space-y-4 md:space-y-6">
+              <div className={`w-12 h-12 md:w-14 md:h-14 rounded-[1.25rem] ${section.color} flex items-center justify-center group-hover:bg-foreground group-hover:text-background transition-colors duration-500 shadow-sm border border-border/50`}>
+                <section.icon size={24} className="md:w-[28px] md:h-[28px]" />
+              </div>
+              <div>
+                <h3 className="text-lg md:text-xl font-black uppercase tracking-tight text-foreground">{section.title}</h3>
+                <p className="text-[10px] md:text-xs font-bold text-muted-foreground mt-1 md:mt-2 leading-relaxed uppercase tracking-tight opacity-70">
+                  {section.description}
+                </p>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Full Name</label>
-                <Input 
-                  value={formData.full_name} 
-                  onChange={e => setFormData({...formData, full_name: e.target.value})} 
-                  placeholder="Your Name"
-                  className="bg-muted/5 border-border focus:border-foreground h-12 rounded-xl transition-all"
-                />
-              </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Username</label>
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground select-none font-bold">@</span>
-                  <Input 
-                    value={formData.username} 
-                    onChange={e => setFormData({...formData, username: e.target.value})} 
-                    required
-                    className="pl-10 bg-muted/5 border-border focus:border-foreground h-12 rounded-xl"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Operational Bio</label>
-              <textarea 
-                value={formData.bio} 
-                onChange={e => setFormData({...formData, bio: e.target.value})} 
-                rows={4}
-                className="w-full px-5 py-4 bg-muted/5 border border-border rounded-2xl outline-none focus:border-foreground transition-all resize-none text-sm font-medium leading-relaxed"
-                placeholder="What is your mission?"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Digital Home</label>
-                <Input 
-                  type="url"
-                  value={formData.website} 
-                  onChange={e => setFormData({...formData, website: e.target.value})} 
-                  placeholder="https://..."
-                  className="bg-muted/5 border-border focus:border-foreground h-12 rounded-xl"
-                />
-              </div>
-              <div className="space-y-3">
-                <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest pl-1">Social Feed</label>
-                <Input 
-                  type="url"
-                  value={formData.twitter} 
-                  onChange={e => setFormData({...formData, twitter: e.target.value})} 
-                  placeholder="https://x.com/..."
-                  className="bg-muted/5 border-border focus:border-foreground h-12 rounded-xl"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 pt-4">
-            <Button type="submit" disabled={saving} className="rounded-full h-16 px-16 font-black uppercase tracking-[0.3em] bg-foreground text-background hover:scale-[1.02] transition-transform">
-              {saving ? <Loader2 size={20} className="animate-spin" /> : <Save size={20} />}
-              {saving ? 'Syncing Network...' : 'Commit Changes'}
-            </Button>
-          </div>
-        </form>
-
-        {/* Sidebar Settings - Anon Identity */}
-        <aside className="space-y-8">
-          <div className="p-8 rounded-[2.5rem] bg-black text-white space-y-8 shadow-2xl">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-white/50 flex items-center gap-3">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              Shadow Identity
-            </h2>
             
-            <p className="text-[10px] font-bold leading-relaxed text-white/40 uppercase tracking-widest">
-              Set your alias for anonymous posting and private signals.
-            </p>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em]">Code Name / Alias</label>
-                <input 
-                  value={anonIdentity.alias_name}
-                  onChange={e => setAnonIdentity({...anonIdentity, alias_name: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold focus:border-white/40 outline-none transition-all"
-                  placeholder="Ghost_Protocol"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.3em]">Avatar Identity Seed</label>
-                <input 
-                  value={anonIdentity.avatar_seed}
-                  onChange={e => setAnonIdentity({...anonIdentity, avatar_seed: e.target.value})}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold focus:border-white/40 outline-none transition-all"
-                  placeholder="random_seed"
-                />
-              </div>
-
-              <div className="pt-4 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center font-black text-lg">
-                  {anonIdentity.alias_name ? anonIdentity.alias_name.charAt(0).toUpperCase() : '?'}
-                </div>
-                <div className="text-[10px] font-black text-white uppercase tracking-widest">
-                  Preview <br />
-                  <span className="text-white/40">{anonIdentity.alias_name || 'Not Set'}</span>
-                </div>
-              </div>
+            <div className="flex items-center justify-between pt-4 mt-6 md:mt-0 border-t border-border/40">
+              <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                Configure Protocol
+              </span>
+              <ChevronRight size={14} className="text-border group-hover:text-foreground group-hover:translate-x-1 transition-all" />
             </div>
-          </div>
+          </Link>
+        ))}
+      </div>
 
-          <div className="p-8 rounded-[2.5rem] bg-muted/5 border border-border border-dashed">
-             <h3 className="text-[10px] font-black uppercase tracking-widest mb-4">Network Preferences</h3>
-             <label className="flex items-center gap-3 text-xs font-bold cursor-pointer group">
-               <div className="w-5 h-5 rounded border border-border group-hover:border-foreground transition-colors flex items-center justify-center">
-                 <div className="w-2 h-2 bg-foreground rounded-sm" />
-               </div>
-               High-Contrast Mode
-             </label>
-          </div>
-        </aside>
+      {/* Account Info Card */}
+      <div className="mt-8 md:mt-12 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] bg-muted/5 border border-border border-dashed flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 md:gap-8">
+        <div className="flex items-center gap-4 md:gap-6">
+           <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-black flex items-center justify-center text-white text-xl md:text-2xl font-black">
+              {profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}
+           </div>
+           <div>
+             <p className="text-xs md:text-sm font-black text-foreground uppercase tracking-tight truncate max-w-[150px] md:max-w-none">{profile?.full_name || "Archive Resident"}</p>
+             <p className="text-[10px] md:text-xs font-bold text-muted-foreground tracking-tight truncate max-w-[150px] md:max-w-none">{user.email}</p>
+           </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-3 w-full lg:w-auto">
+           <Link href={`/profile/${profile?.username}`} className="flex-1 lg:flex-none">
+             <Button variant="outline" className="w-full rounded-full h-11 md:h-12 px-5 md:px-6 text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] gap-2">
+               <Eye size={14} /> Public Archive
+             </Button>
+           </Link>
+           <button 
+             onClick={() => setShowDeleteModal(true)}
+             className="flex-1 lg:flex-none rounded-full h-11 md:h-12 px-5 md:px-6 text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em] bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
+           >
+             <Trash2 size={14} /> Terminate
+           </button>
+        </div>
       </div>
     </div>
   );
 }
-
