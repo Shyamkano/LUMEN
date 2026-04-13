@@ -49,8 +49,8 @@ export default function Footer() {
           <div className="space-y-6 md:space-y-8">
             <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-black">Protocol</h4>
             <div className="flex flex-col gap-3 md:gap-4 text-xs font-bold text-muted-foreground">
-              <Link href="#" className="hover:text-black transition-colors">Privacy</Link>
-              <Link href="#" className="hover:text-black transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-black transition-colors">Privacy</Link>
+              <Link href="/terms" className="hover:text-black transition-colors">Terms</Link>
               <Link href="#" className="hover:text-black transition-colors">Security</Link>
             </div>
           </div>
@@ -71,9 +71,14 @@ export default function Footer() {
         </div>
 
         <div className="pt-20 border-t border-border flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
-            &copy; {new Date().getFullYear()} LUMEN DIGITAL NARRATIVE PLATFORM
-          </p>
+          <div className="flex flex-col gap-2">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
+              &copy; {new Date().getFullYear()} LUMEN DIGITAL NARRATIVE PLATFORM
+            </p>
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
+              Built with ❤️ by <a href="https://github.com/Shyamkano" target="_blank" rel="noreferrer" className="text-foreground hover:underline">@shyamkano</a>
+            </p>
+          </div>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Network Active</span>

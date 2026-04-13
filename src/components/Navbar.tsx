@@ -57,10 +57,10 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
     <>
       <header className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md border-b border-border h-16 md:h-20 flex items-center px-3 md:px-6 transition-all duration-300">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-2 md:gap-8">
-          
+
           {/* Left: Logo & Hamburger */}
           <div className="flex items-center gap-2 md:gap-10">
-            <button 
+            <button
               onClick={() => setMobileMenuOpen(true)}
               className="lg:hidden p-2 rounded-xl hover:bg-muted/50 transition-colors"
             >
@@ -73,10 +73,10 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
             >
               LUMEN
             </Link>
-            
+
             <nav className="hidden lg:flex items-center gap-8">
               {/* Desktop menu items */}
-              <Link href="/feed" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">About</Link>
+              <Link href="https://lumen-archive.vercel.app/" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">About</Link>
               {user && <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">Dashboard</Link>}
             </nav>
           </div>
@@ -96,7 +96,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
               />
               {showMobileSearch && (
                 <button type="button" onClick={() => setShowMobileSearch(false)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground">
-                   <CloseIcon size={14} />
+                  <CloseIcon size={14} />
                 </button>
               )}
             </form>
@@ -104,17 +104,17 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
             {/* Suggestions Dropdown (Shared) */}
             {searchOpen && (
               <div className="absolute top-12 left-0 right-0 bg-white border border-border rounded-2xl shadow-2xl overflow-hidden py-4 animate-reveal max-h-[80vh] overflow-y-auto">
-                 {suggestions.users.length === 0 && suggestions.posts.length === 0 ? (
-                   <div className="px-6 py-8 text-center text-muted-foreground">
-                     <p className="text-[10px] font-black uppercase tracking-[0.2em]">Searching the Archive...</p>
-                   </div>
-                 ) : (
-                   <>
+                {suggestions.users.length === 0 && suggestions.posts.length === 0 ? (
+                  <div className="px-6 py-8 text-center text-muted-foreground">
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em]">Searching the Archive...</p>
+                  </div>
+                ) : (
+                  <>
                     {suggestions.users.length > 0 && (
                       <div className="mb-4">
                         <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Residents</p>
                         {suggestions.users.map(u => (
-                          <Link key={u.id} href={`/profile/${u.username}`} onClick={() => {setSearchOpen(false); setShowMobileSearch(false);}} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
+                          <Link key={u.id} href={`/profile/${u.username}`} onClick={() => { setSearchOpen(false); setShowMobileSearch(false); }} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
                             <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black overflow-hidden">{u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : (u.username || 'A').charAt(0).toUpperCase()}</div>
                             <span className="text-sm font-bold text-foreground group-hover:underline truncate">{u.full_name || u.username}</span>
                           </Link>
@@ -125,22 +125,22 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                       <div>
                         <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Narratives</p>
                         {suggestions.posts.map(p => (
-                          <Link key={p.id} href={`/post/${p.slug}`} onClick={() => {setSearchOpen(false); setShowMobileSearch(false);}} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
+                          <Link key={p.id} href={`/post/${p.slug}`} onClick={() => { setSearchOpen(false); setShowMobileSearch(false); }} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
                             <FileText size={16} className="text-muted-foreground shrink-0" />
                             <span className="text-sm font-bold text-foreground group-hover:underline truncate">{p.title}</span>
                           </Link>
                         ))}
                       </div>
                     )}
-                   </>
-                 )}
+                  </>
+                )}
               </div>
             )}
           </div>
 
           {/* Right: Notifications & Profile */}
           <div className="flex items-center gap-1 md:gap-6 shrink-0">
-            <button 
+            <button
               onClick={() => setShowMobileSearch(true)}
               className={`md:hidden p-2 rounded-xl hover:bg-muted/50 transition-colors ${showMobileSearch ? 'hidden' : 'block'}`}
             >
@@ -205,14 +205,14 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
       </header>
 
       {/* Mobile Menu Overlay */}
-      <div 
+      <div
         className={`fixed inset-0 z-[1000] lg:hidden transition-all duration-500 ${mobileMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}
       >
-        <div 
-          className="absolute inset-0 bg-black/60 backdrop-blur-md" 
+        <div
+          className="absolute inset-0 bg-black/60 backdrop-blur-md"
           onClick={() => setMobileMenuOpen(false)}
         />
-        <div 
+        <div
           className={`absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white border-r border-border p-6 flex flex-col transition-transform duration-500 ease-expo ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           <div className="flex justify-between items-center mb-10">

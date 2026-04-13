@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { usePosts } from '@/lib/hooks/usePosts';
-import { PostCard } from '@/components/post/PostCard';
+import { PostCard, PostCardSkeleton } from '@/components/post/PostCard';
 import { FeedFilter } from '@/components/feed/FeedFilter';
 import type { PostType, Post } from '@/types';
 import { Loader2, X } from 'lucide-react';
@@ -34,8 +34,10 @@ export function FeedList() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 size={32} className="text-zinc-400 animate-spin" />
+        <div className="grid gap-12 max-w-2xl mx-auto">
+          {[1, 2, 3].map((i) => (
+            <PostCardSkeleton key={i} />
+          ))}
         </div>
       ) : error ? (
         <div className="text-center py-20 text-red-500 text-sm font-bold uppercase tracking-widest">

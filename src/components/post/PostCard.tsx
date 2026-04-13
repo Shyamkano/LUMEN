@@ -151,5 +151,29 @@ export function PostCard({ post }: { post: Post }) {
     </Link>
   );
 }
-
-
+export function PostCardSkeleton() {
+  return (
+    <div className="relative flex flex-col p-4 md:p-6 rounded-[2rem] border border-border bg-card/50 backdrop-blur-sm min-h-[350px] md:h-[400px] lumen-shimmer opacity-50">
+      <div className="flex items-center gap-2.5 mb-4">
+        <div className="w-8 h-8 rounded-full bg-muted/20 shrink-0" />
+        <div className="space-y-1.5 flex-1">
+          <div className="w-24 h-2 bg-muted/20 rounded-full" />
+          <div className="w-12 h-1 bg-muted/20 rounded-full" />
+        </div>
+      </div>
+      <div className="flex-1 space-y-4">
+        <div className="w-full aspect-[16/9] rounded-2xl bg-muted/20" />
+        <div className="w-3/4 h-5 md:h-6 bg-muted/20 rounded-lg" />
+        <div className="w-full h-2.5 bg-muted/20 rounded-full" />
+        <div className="w-2/3 h-2.5 bg-muted/20 rounded-full hidden xs:block" />
+      </div>
+      <div className="mt-6 md:mt-auto pt-4 border-t border-border/30 flex justify-between items-center">
+        <div className="w-16 h-2 bg-muted/20 rounded-full" />
+        <div className="flex gap-4">
+          <div className="w-6 h-3 bg-muted/20 rounded-full" />
+          <div className="w-6 h-3 bg-muted/20 rounded-full" />
+        </div>
+      </div>
+    </div>
+  );
+}

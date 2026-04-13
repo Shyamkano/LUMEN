@@ -3,66 +3,77 @@
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import LinkExt from '@tiptap/extension-link';
-import ImageExt from '@tiptap/extension-image';
 import UnderlineExt from '@tiptap/extension-underline';
 import Mention from '@tiptap/extension-mention';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 
-import { mergeAttributes } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
 
 import type { PostType } from '@/types';
 
 const lowlight = createLowlight(common);
 
-// Override the node spec — must declare label in addAttributes for JSON round-trip
+// THE UNIFIED IMAGE AUTHORITY
+const PersistentImage = Node.create({
+  name: 'lumenImage',
+  group: 'block',
+  inline: false,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { 
+        default: null,
+        parseHTML: element => element.getAttribute('src') || element.getAttribute('url'),
+      },
+      url: { default: null },
+      alt: { default: '' },
+      title: { default: '' },
+    };
+  },
+  parseHTML() {
+    return [{ tag: 'img' }];
+  },
+  renderHTML({ node }) {
+    const finalSrc = node.attrs.src || node.attrs.url;
+    return ['div', { class: 'lumen-image-container lumen-shimmer relative my-16 group mx-auto w-full' }, 
+      ['img', {
+        src: finalSrc,
+        class: 'rounded-[16px] border border-border block w-full shadow-lg transition-all duration-700 h-auto',
+      }],
+      ['div', { class: 'absolute top-4 right-4 text-[7px] font-black uppercase tracking-[0.2em] text-white/30 bg-black/20 px-2 py-1 rounded-full backdrop-blur-md border border-white/5 opacity-0 group-hover:opacity-100 transition-all duration-500 font-mono' }, 'LUMEN AUTHORITY']
+    ];
+  },
+});
+
 const CustomMention = Mention.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
-      id: {
-        default: null,
-        parseHTML: (element: HTMLElement) => element.getAttribute('data-id'),
-        renderHTML: (attributes: Record<string, any>) => {
-          if (!attributes.id) return {};
-          return { 'data-id': attributes.id };
-        },
-      },
-      label: {
-        default: null,
-        parseHTML: (element: HTMLElement) => element.getAttribute('data-label'),
-        renderHTML: (attributes: Record<string, any>) => {
-          if (!attributes.label) return {};
-          return { 'data-label': attributes.label };
-        },
-      },
+      id: { default: null },
+      label: { default: null },
     };
   },
   renderHTML({ node, HTMLAttributes }) {
     const label = node.attrs.label;
     const text = (!label || label === 'null') ? '@Resident' : `@${label}`;
-    
-    // Use the combined attributes but enforce the mention-tag class
     const attrs = mergeAttributes(this.options.HTMLAttributes, HTMLAttributes, {
       class: 'mention-tag',
     });
-    
     return ['span', attrs, text];
-  },
-  renderText({ node }) {
-    const label = node.attrs.label;
-    if (!label || label === 'null') return '@Resident';
-    return `@${label}`;
   },
 });
 
 const extensions = [
-  StarterKit.configure({ codeBlock: false }),
+  StarterKit.configure({ 
+    codeBlock: false,
+    ...({ image: false } as any),
+  }),
   LinkExt.configure({ 
     openOnClick: false,
     autolink: true,
   }),
-  ImageExt,
+  PersistentImage,
   UnderlineExt,
   CodeBlockLowlight.configure({ lowlight }),
   CustomMention.configure({
@@ -72,9 +83,17 @@ const extensions = [
   }),
 ];
 
-
-
-
+function fixContentNodes(content: any) {
+  if (!content || typeof content !== 'object') return content;
+  if (content.type === 'image') content.type = 'lumenImage';
+  if (content.type === 'lumenImage' && content.attrs) {
+    content.attrs.src = content.attrs.src || content.attrs.url;
+  }
+  if (content.content && Array.isArray(content.content)) {
+    content.content.forEach(fixContentNodes);
+  }
+  return content;
+}
 
 interface PreviewPanelProps {
   title: string;
@@ -87,16 +106,9 @@ export function PreviewPanel({ title, content, type, codeSnippets = [] }: Previe
   let html = '';
   try {
     if (content) {
-      let doc = content;
-      // Handle stringified JSON if necessary
-      if (typeof content === 'string') {
-        try {
-          doc = JSON.parse(content);
-        } catch {
-          // If it's just raw text, wrap it in a doc structure? 
-          // For now, let's stick to JSON
-        }
-      }
+      // Create a deep copy to avoid mutating the original form state
+      let doc = JSON.parse(JSON.stringify(content));
+      doc = fixContentNodes(doc);
       
       if (typeof doc === 'object' && doc !== null && (doc as any).type === 'doc') {
         html = generateHTML(doc as any, extensions);
@@ -106,7 +118,6 @@ export function PreviewPanel({ title, content, type, codeSnippets = [] }: Previe
     console.error('Preview Generation Error:', err);
     html = `<p class="text-zinc-400 italic">Preview temporary unavailable (Rendering sync in progress...)</p>`;
   }
-
 
   return (
     <div className="preview-panel bg-white rounded-2xl border border-zinc-100 overflow-hidden">

@@ -53,8 +53,10 @@ export default async function FeedPage() {
               <div className="h-px flex-1 bg-border/40" />
             </div>
             <Suspense fallback={
-              <div className="flex justify-center py-20">
-                <Loader2 className="animate-spin text-muted-foreground" />
+              <div className="grid gap-12 max-w-2xl mx-auto">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-[400px] rounded-[2rem] border border-border bg-card/50 lumen-shimmer opacity-40" />
+                ))}
               </div>
             }>
               <FeedList />

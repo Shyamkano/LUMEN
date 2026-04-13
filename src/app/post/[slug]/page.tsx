@@ -131,7 +131,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="flex items-center gap-6 py-10 mb-16 border-y border-border">
             {post.is_anonymous ? (
               <Link href={`/alias/${encodeURIComponent(post.anonymous_identity?.alias_name || '')}`} className="shrink-0">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-black hover:scale-105 transition-transform shadow-lg shadow-foreground/5">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-black hover:scale-105 transition-transform shadow-lg shadow-foreground/5 lumen-shimmer">
                   <img 
                     src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`}
                     className="w-full h-full object-cover invert"
@@ -142,7 +142,7 @@ export default async function PostPage({ params }: PostPageProps) {
             ) : (
               <Link href={`/profile/${post.profile?.username || ''}`} className="shrink-0 group/avatar relative">
                 <div className="absolute -inset-1 bg-foreground rounded-full opacity-0 group-hover/avatar:opacity-10 transition-opacity" />
-                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-muted/10 text-foreground hover:scale-105 transition-transform">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-muted/10 text-foreground hover:scale-105 transition-transform lumen-shimmer">
                   {post.profile?.avatar_url
                     ? <img src={post.profile.avatar_url} alt={authorName} className="w-full h-full object-cover" />
                     : <span className="text-xl font-black">{authorName.charAt(0).toUpperCase()}</span>
@@ -251,7 +251,7 @@ export default async function PostPage({ params }: PostPageProps) {
         <aside className="hidden lg:block sticky top-28 h-fit space-y-16">
           <div className="space-y-8">
             <div className="w-24 h-24 rounded-full border-2 border-border p-1">
-              <div className="w-full h-full rounded-full overflow-hidden bg-muted/10 flex items-center justify-center font-black text-3xl border border-border">
+              <div className="w-full h-full rounded-full overflow-hidden bg-muted/10 flex items-center justify-center font-black text-3xl border border-border lumen-shimmer">
                 {post.is_anonymous ? (
                   <img 
                     src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`}
@@ -272,7 +272,11 @@ export default async function PostPage({ params }: PostPageProps) {
               </p>
             </div>
             {!post.is_anonymous && !isOwnPost && post.author_id && (
-              <FollowButton followingId={post.author_id} className="w-full rounded-full h-12 text-xs font-black uppercase tracking-widest" />
+              <FollowButton 
+                followingId={post.author_id} 
+                initialIsFollowing={initialIsFollowing}
+                className="w-full rounded-full h-12 text-xs font-black uppercase tracking-widest" 
+              />
             )}
           </div>
 
