@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui';
-import { PenTool, Zap, Code } from 'lucide-react';
+import { PenTool, Zap, Code, Ghost, Sparkles, Mic } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -14,6 +14,7 @@ export default async function LandingPage() {
   const userAgent = headersList.get('user-agent') || '';
   const isMobile = /mobile|android|iphone|ipad|phone/i.test(userAgent);
 
+  // Re-enabling the redirect as per the 'old' logic
   if (isMobile || user) {
     redirect('/feed');
   }
@@ -59,11 +60,11 @@ export default async function LandingPage() {
           </Link>
         </div>
 
-        {/* Feature grid - Responsive */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 md:gap-6 mt-12 md:mt-8 w-full border-t border-border/50 pt-8">
+        {/* Feature grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-y-12 gap-x-8 md:gap-x-6 m-12 md:mt-8 w-full border-t border-border/50 pt-8">
           <div className="flex flex-col gap-2">
-            <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center shadow-md">
-              <PenTool size={16} strokeWidth={2.5} />
+            <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <PenTool size={20} strokeWidth={2.5} />
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Curation</h3>
@@ -71,8 +72,8 @@ export default async function LandingPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center shadow-md">
-              <Zap size={16} strokeWidth={2.5} />
+            <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <Zap size={20} strokeWidth={2.5} />
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Velocity</h3>
@@ -80,12 +81,40 @@ export default async function LandingPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2">
-            <div className="w-8 h-8 rounded-lg bg-foreground text-background flex items-center justify-center shadow-md">
-              <Code size={16} strokeWidth={2.5} />
+            <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <Code size={20} strokeWidth={2.5} />
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Structure</h3>
               <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Technical documentation and project logs.</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <Ghost size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Shadow Mode</h3>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Anonymized editorial presence with ghost identities.</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <Sparkles size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">AI Synthesis</h3>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Intelligent narrative logic and editing assistance.</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="w-10 h-10 rounded-xl bg-foreground text-background flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-500">
+              <Mic size={20} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Multi-Sync</h3>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Monochromatic voice logs and audio archives.</p>
             </div>
           </div>
         </div>
@@ -93,5 +122,3 @@ export default async function LandingPage() {
     </div>
   );
 }
-
-

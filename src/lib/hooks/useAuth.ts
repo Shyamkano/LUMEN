@@ -34,7 +34,8 @@ export function useAuth() {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data }: any) => {
+      const user = data.user;
       setUser(user);
       if (user) {
         fetchProfile(user.id).then(() => setLoading(false));
@@ -44,7 +45,7 @@ export function useAuth() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (_event: any, session: any) => {
         const newUser = session?.user ?? null;
         setUser(newUser);
         if (newUser) {

@@ -43,7 +43,7 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
 
   const handleImageSubmit = () => {
     if (imageUrl) {
-      editor.chain().focus().setImage({ src: imageUrl }).run();
+      (editor.chain().focus() as any).setImage({ src: imageUrl }).run();
       if (imageCredit) {
         editor.chain().focus().insertContent({
           type: 'paragraph',
@@ -75,7 +75,7 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
 
       if (!res.ok) throw new Error('Upload failed');
       const data = await res.json();
-      editor.chain().focus().setImage({ src: data.url }).run();
+      (editor.chain().focus() as any).setImage({ src: data.url }).run();
       setShowImageModal(false);
     } catch (err) {
       alert('Upload failed');

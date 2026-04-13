@@ -37,13 +37,17 @@ export default async function FeedPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 md:gap-16 relative py-8 md:py-12">
         <div className="space-y-10 md:space-y-12">
           {/* Compressed Feed Header */}
-          <header className="animate-reveal">
-            <div className="flex items-center gap-4 mb-2 overflow-hidden">
+          <header className="animate-reveal space-y-2">
+            <div className="flex items-center gap-3">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-foreground tracking-tighter leading-tight break-words">
-                Dialogue <span className="italic font-light opacity-60">& Archive.</span>
+                Dialogue <span className="italic font-light opacity-60 font-serif lowercase tracking-normal text-[0.85em]">Archive.</span>
               </h1>
+              <div className="hidden sm:flex items-center gap-2 border border-border px-2 py-1 rounded-full bg-zinc-50 translate-y-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Sync Active</span>
+              </div>
             </div>
-            <p className="text-muted-foreground font-medium tracking-tight">Exploring the latest luminous logs from the network.</p>
+            <p className="text-sm md:text-base text-muted-foreground font-medium tracking-tight">Exploring the latest luminous logs from the network node.</p>
           </header>
 
           {/* Feed */}
@@ -70,7 +74,7 @@ export default async function FeedPage() {
         <aside className="hidden lg:block space-y-12 sticky top-28 h-fit">
 
           {!user && (
-            <div className="p-8 rounded-[2rem] bg-card border border-border transition-all hover:shadow-2xl hover:shadow-foreground/5">
+            <article className="relative h-full flex flex-col p-6 rounded-3xl border border-border/60 bg-white hover:border-black hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all duration-700 group-hover:-translate-y-1 group-active:scale-[0.98]">
               <h3 className="text-xl font-black text-foreground mb-3 font-serif-heading italic">Join the LUMEN ✨</h3>
               <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
                 Connect with a community sharing ideas across multiple formats. No noise, just signal.
@@ -78,7 +82,7 @@ export default async function FeedPage() {
               <Link href="/auth/signup">
                 <Button className="w-full rounded-full h-12">Create Account</Button>
               </Link>
-            </div>
+            </article>
           )}
 
           {/* Trending Posts Widget */}

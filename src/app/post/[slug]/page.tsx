@@ -31,9 +31,28 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const post = await getPostBySlug(slug);
   if (!post) return { title: 'Post Not Found' };
 
+  const description = post.is_anonymous 
+    ? `A ${post.type} synchronization by an anonymous resident.` 
+    : `A ${post.type} synchronization by ${post.profile?.full_name || post.profile?.username || 'a resident'}.`;
+
+  const ogImage = post.cover_image || 'https://lumen-archive.vercel.app/og-default.png';
+
   return {
     title: `${post.title} - LUMEN`,
-    description: post.title,
+    description: description,
+    openGraph: {
+      title: post.title,
+      description: description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
+      type: 'article',
+      siteName: 'LUMEN',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: description,
+      images: [ogImage],
+    },
   };
 }
 

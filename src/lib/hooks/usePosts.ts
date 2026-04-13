@@ -1,8 +1,6 @@
-'use client';
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
-import type { PostType } from '@/types';
+import type { PostType, Post } from '@/types';
 
 // Fetch posts client-side (for SPA-style feed)
 async function fetchPosts(type?: PostType | 'discovery' | 'shadows', tag?: string) {
@@ -64,7 +62,7 @@ async function fetchPosts(type?: PostType | 'discovery' | 'shadows', tag?: strin
       .select('following_id')
       .eq('follower_id', user.id)
       .in('following_id', authorIds);
-    followingSet = new Set((followingData || []).map(f => f.following_id));
+    followingSet = new Set((followingData || []).map((f: any) => f.following_id));
   }
 
   const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));

@@ -49,14 +49,18 @@ export function PostActions({
     }
   };
 
+  const [shared, setShared] = useState(false);
+
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
         title: document.title,
         url: window.location.href,
-      });
+      }).catch(() => {});
     } else {
       navigator.clipboard.writeText(window.location.href);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
     }
   };
 
@@ -91,8 +95,8 @@ export function PostActions({
         <div className="w-px h-5 bg-zinc-200" />
 
         {/* Share */}
-        <Button size="icon" variant="ghost" onClick={handleShare} className="rounded-full text-zinc-500 hover:text-zinc-900 h-9 w-9">
-          <Share2 size={18} />
+        <Button size="icon" variant="ghost" onClick={handleShare} className={`rounded-full h-9 w-9 transition-colors ${shared ? 'text-green-600' : 'text-zinc-500 hover:text-zinc-900'}`}>
+          {shared ? <Zap size={18} className="fill-green-600" /> : <Share2 size={18} />}
         </Button>
 
         {/* Bookmark */}

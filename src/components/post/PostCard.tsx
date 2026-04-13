@@ -31,7 +31,7 @@ export function PostCard({ post }: { post: Post }) {
 
   return (
     <Link href={`/post/${post.slug}`} className="block group h-full">
-      <article className="relative h-full flex flex-col p-6 rounded-3xl border border-border bg-card/50 backdrop-blur-sm hover:border-foreground/30 hover:bg-card hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.6)] transition-all duration-500 group-hover:-translate-y-1">
+      <article className="relative h-full flex flex-col p-6 rounded-3xl border border-border/80 bg-white hover:border-black hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all duration-700 group-hover:-translate-y-1 group-active:scale-[0.98]">
 
         {/* Author row */}
         <div className="flex items-center justify-between mb-4">
@@ -136,7 +136,10 @@ export function PostCard({ post }: { post: Post }) {
             </span>
           </div>
 
-          <div className="flex items-center gap-4 text-muted-foreground/60">
+          <div className="flex items-center gap-6 text-muted-foreground">
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] hidden sm:block opacity-40">
+              REF // #{post.id.substring(0, 8).toUpperCase()}
+            </span>
             <span className="flex items-center gap-1 text-[10px] font-black">
               <Heart size={14} className="group-hover:text-red-500 transition-colors" />
               {post.likes_count || 0}

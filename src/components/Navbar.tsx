@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui';
 import { logout } from '@/app/auth/actions';
-import { PenTool, User, LogOut, ChevronDown, Settings, Search, Layers, Bookmark, FileText, Bell, Menu, X as CloseIcon } from 'lucide-react';
+import { PenTool, User, LogOut, ChevronDown, Settings, Search, Layers, Bookmark, FileText, Bell, Menu, X as CloseIcon, Zap } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -71,12 +71,12 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
               href="/feed"
               className="text-lg md:text-2xl font-black tracking-tighter text-black hover:opacity-70 transition-all uppercase shrink-0"
             >
-              LUMEN
+              LUMEN <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse ml-1 inline-block" />
             </Link>
 
             <nav className="hidden lg:flex items-center gap-8">
               {/* Desktop menu items */}
-              <Link href="https://lumen-archive.vercel.app/" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">About</Link>
+              <Link href="/" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">About</Link>
               {user && <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">Dashboard</Link>}
             </nav>
           </div>
@@ -226,6 +226,9 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
             <nav className="space-y-6">
               <Link href="/feed" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black">
                 <Layers size={18} /> Archive
+              </Link>
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black">
+                <Zap size={18} /> About
               </Link>
               {user && (
                 <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-black">

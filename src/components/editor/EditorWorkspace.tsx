@@ -129,13 +129,13 @@ const PersistentImage = Node.create({
   },
   addCommands() {
     return {
-      setImage: options => ({ commands }) => {
+      setImage: (options: any) => ({ commands }: any) => {
         return commands.insertContent({
           type: this.name,
           attrs: options,
         });
       },
-    };
+    } as any;
   },
   renderHTML({ node }) {
     const finalSrc = node.attrs.src || node.attrs.url;
