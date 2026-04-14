@@ -4,7 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import LinkExt from '@tiptap/extension-link';
-import { mergeAttributes, Node } from '@tiptap/core';
+import { mergeAttributes } from '@tiptap/core';
 import Underline from '@tiptap/extension-underline';
 import CharacterCount from '@tiptap/extension-character-count';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
@@ -16,6 +16,7 @@ import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
 import { searchUsers } from '@/app/actions/profiles';
 import { SuggestionList } from './SuggestionList';
+import { PersistentImage } from '@/lib/editor/persistent-image';
 
 const lowlight = createLowlight(common);
 
@@ -72,45 +73,6 @@ interface TipTapEditorProps {
   className?: string;
   onOpenAI?: () => void;
 }
-
-// FIXED IMAGE NODE
-const PersistentImage = Node.create({
-  name: 'lumenImage',
-  group: 'block',
-  inline: false,
-  draggable: true,
-  addAttributes() {
-    return {
-      src: { default: null, parseHTML: element => element.getAttribute('src') || element.getAttribute('url') },
-      url: { default: null },
-      alt: { default: null },
-      title: { default: null },
-    };
-  },
-  parseHTML() {
-    return [{ tag: 'img' }];
-  },
-  addCommands() {
-    return {
-      setImage: (options: any) => ({ commands }: any) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: options,
-        });
-      },
-    } as any;
-  },
-  renderHTML({ node }) {
-    const finalSrc = node.attrs.src || node.attrs.url;
-    return ['div', { class: 'lumen-image-container lumen-shimmer relative my-16 group mx-auto max-w-4xl' }, 
-      ['img', {
-        src: finalSrc,
-        class: 'rounded-[32px] border border-border block w-full shadow-2xl transition-all duration-700 h-auto hover:scale-[1.01]',
-      }],
-      ['div', { class: 'absolute top-6 right-6 text-[8px] font-black uppercase tracking-[0.3em] text-white/30 bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500 font-mono' }, 'LUMEN AUTHORITY']
-    ];
-  },
-});
 
 export function TipTapEditor({
   editor,

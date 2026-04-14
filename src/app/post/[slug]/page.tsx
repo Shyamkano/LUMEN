@@ -75,6 +75,18 @@ export default async function PostPage({ params }: PostPageProps) {
     ? JSON.parse(post.content) 
     : post.content;
 
+  console.log('[PostPage] Retrieved post.content from DB:', post.content);
+  console.log('[PostPage] Parsed contentObj:', contentObj);
+  
+  // Log lumenImage nodes specifically
+  if (contentObj?.content) {
+    contentObj.content.forEach((node: any, idx: number) => {
+      if (node.type === 'lumenImage') {
+        console.log(`[PostPage] lumenImage node #${idx}:`, node.attrs);
+      }
+    });
+  }
+
   const isLiked = await checkUserLiked(post.id);
   const isBookmarked = await checkUserBookmarked(post.id);
 

@@ -10,6 +10,50 @@ import { v4 as uuidv4 } from 'uuid';
 import { calculateReadTime } from '@/lib/utils';
 import type { PostType, PostStatus } from '@/types';
 
+/**
+ * Normalizes content before saving to ensure image nodes have proper src attributes
+ * This is a critical fix for the image URL serialization issue
+ * Converts Server Component references to plain objects first
+ */
+function normalizeContentForStorage(content: any, depth = 0): any {
+  if (!content || typeof content !== 'object') return content;
+  
+  const indent = '  '.repeat(depth);
+  
+  // Convert Server Component reference to plain object
+  const plainContent = JSON.parse(JSON.stringify(content));
+  
+  console.log(`${indent}[normalizeContentForStorage] [depth=${depth}] type=${plainContent.type}, hasAttrs=${!!plainContent.attrs}`);
+  
+  // Normalize image nodes
+  if (plainContent.type === 'lumenImage') {
+    console.log(`${indent}  → Found lumenImage node!`);
+    if (plainContent.attrs) {
+      console.log(`${indent}  ✓ attrs exist:`, JSON.stringify(plainContent.attrs));
+      // Ensure both src and url are set to the same value
+      const imageUrl = plainContent.attrs.src || plainContent.attrs.url;
+      if (imageUrl) {
+        plainContent.attrs.src = imageUrl;
+        plainContent.attrs.url = imageUrl;
+        console.log(`${indent}  ✓ Image attrs preserved - src/url set`);
+      }
+    } else {
+      console.log(`${indent}  ❌ NO ATTRS on lumenImage node!`);
+    }
+  }
+  
+  // Recursively process nested content
+  if (plainContent.content && Array.isArray(plainContent.content)) {
+    console.log(`${indent}  Processing ${plainContent.content.length} child nodes`);
+    plainContent.content = plainContent.content.map((child: any, idx: number) => {
+      console.log(`${indent}  [${idx}] Processing child...`);
+      return normalizeContentForStorage(child, depth + 1);
+    });
+  }
+  
+  return plainContent;
+}
+
 export async function createPost(formData: {
   title?: string | null;
   content: Record<string, unknown> | null;
@@ -29,16 +73,23 @@ export async function createPost(formData: {
   }
 
   const {
-    title, content, type = 'blog',
+    title: rawTitle, content: rawContent, type = 'blog',
     is_anonymous = false, status = 'published',
     audio_url = null, cover_image = null,
     tags = [], code_snippets = [],
   } = formData;
 
-  const finalTitle = title || `Post ${Date.now()}`;
+  console.log('[createPost] Received raw content:', JSON.stringify(rawContent, null, 2));
+
+  // Normalize content to ensure image URLs are preserved
+  const content = normalizeContentForStorage(rawContent);
+
+  console.log('[createPost] Normalized content:', JSON.stringify(content, null, 2));
+
+  const title = rawTitle || `Post ${Date.now()}`;
 
   // Generate slug
-  const baseSlug = slugify(finalTitle, { lower: true, strict: true });
+  const baseSlug = slugify(title, { lower: true, strict: true });
   const slug = `${baseSlug}-${uuidv4().slice(0, 8)}`;
 
   // Calculate read time
@@ -80,10 +131,25 @@ export async function createPost(formData: {
     }
   }
 
+  console.log('[createPost] === ABOUT TO INSERT INTO POSTS ===');
+  console.log('[createPost] content.type:', content.type);
+  console.log('[createPost] content nodes count:', content?.content?.length);
+  
+  // Check specifically for lumenImage nodes BEFORE insert
+  if (content?.content) {
+    content.content.forEach((node: any, idx: number) => {
+      if (node.type === 'lumenImage') {
+        console.log(`[createPost] Node #${idx} is lumenImage - attrs:`, node.attrs ? JSON.stringify(node.attrs) : 'MISSING!');
+      }
+    });
+  }
+  
+  console.log('[createPost] About to insert, content for DB:', JSON.stringify(content, null, 2));
+
   const { data: post, error } = await supabase
     .from('posts')
     .insert([{
-      title: finalTitle,
+      title: title,
       content,
       type,
       status,
@@ -102,6 +168,35 @@ export async function createPost(formData: {
   if (error || !post) {
     console.error('Post creation error:', error);
     return { error: error?.message || 'Failed to initialize synchronization.' };
+  }
+  
+  console.log('[createPost] ✅ Post created with ID:', post.id);
+  console.log('[createPost] Saved to DB - now fetching back to verify...');
+  
+  // Immediately fetch back to verify what was saved
+  const { data: verifyPost } = await supabase
+    .from('posts')
+    .select('content')
+    .eq('id', post.id)
+    .single();
+  
+  if (verifyPost?.content) {
+    console.log('[createPost] ✅ Verified in DB - content retrieved');
+    console.log('[createPost] DB content.type:', verifyPost.content.type);
+    console.log('[createPost] DB content nodes count:', verifyPost.content?.content?.length);
+    
+    // Check lumenImage nodes in verified content
+    if (verifyPost.content?.content) {
+      verifyPost.content.content.forEach((node: any, idx: number) => {
+        if (node.type === 'lumenImage') {
+          console.log(`[createPost] DB Node #${idx} is lumenImage - attrs:`, node.attrs ? JSON.stringify(node.attrs) : 'MISSING!!!');
+        }
+      });
+    }
+    
+    console.log('[createPost] Full verified content:', JSON.stringify(verifyPost.content, null, 2));
+  } else {
+    console.error('[createPost] ❌ Could not verify - verifyPost is undefined');
   }
 
   // Insert audio metadata if any
@@ -128,7 +223,7 @@ export async function createPost(formData: {
   await supabase.from('post_versions').insert([{
     post_id: post.id,
     content,
-    title: finalTitle,
+    title: title,
     version_num: 1,
   }]);
 
@@ -177,8 +272,9 @@ export async function updatePost(
   const updateData: Record<string, any> = {};
   if (formData.title !== undefined) updateData.title = formData.title;
   if (formData.content !== undefined) {
-    updateData.content = formData.content;
-    updateData.read_time = calculateReadTime(formData.content);
+    // Normalize content to ensure image URLs are preserved
+    updateData.content = normalizeContentForStorage(formData.content);
+    updateData.read_time = calculateReadTime(updateData.content);
   }
   if (formData.status !== undefined) updateData.status = formData.status;
   if (formData.cover_image !== undefined) updateData.cover_image = formData.cover_image;
@@ -223,7 +319,7 @@ export async function updatePost(
   if (formData.content !== undefined) {
     await supabase.from('post_versions').insert([{
       post_id: postId,
-      content: formData.content,
+      content: updateData.content, // Use normalized content from updateData
       title: formData.title || updateData.title || (await supabase.from('posts').select('title').eq('id', postId).single()).data?.title,
       version_num: (count || 0) + 1,
     }]);
@@ -430,6 +526,8 @@ export async function getPostBySlug(slug: string) {
     .select('*', { count: 'exact', head: true })
     .eq('post_id', post.id);
 
+  console.log('[getPostBySlug] Retrieved post content from DB:', post.content);
+  
   return {
     ...post,
     author_id: post.is_anonymous ? 'HIDDEN' : post.author_id,

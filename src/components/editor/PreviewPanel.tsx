@@ -9,43 +9,12 @@ import Mention from '@tiptap/extension-mention';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 
-import { mergeAttributes, Node } from '@tiptap/core';
+import { mergeAttributes } from '@tiptap/core';
+import { PersistentImage } from '@/lib/editor/persistent-image';
 
 import type { PostType } from '@/types';
 
 const lowlight = createLowlight(common);
-
-// THE UNIFIED IMAGE AUTHORITY
-const PersistentImage = Node.create({
-  name: 'lumenImage',
-  group: 'block',
-  inline: false,
-  draggable: true,
-  addAttributes() {
-    return {
-      src: { 
-        default: null,
-        parseHTML: element => element.getAttribute('src') || element.getAttribute('url'),
-      },
-      url: { default: null },
-      alt: { default: '' },
-      title: { default: '' },
-    };
-  },
-  parseHTML() {
-    return [{ tag: 'img' }];
-  },
-  renderHTML({ node }) {
-    const finalSrc = node.attrs.src || node.attrs.url;
-    return ['div', { class: 'lumen-image-container lumen-shimmer relative my-16 group mx-auto w-full' }, 
-      ['img', {
-        src: finalSrc,
-        class: 'rounded-[16px] border border-border block w-full shadow-lg transition-all duration-700 h-auto',
-      }],
-      ['div', { class: 'absolute top-4 right-4 text-[7px] font-black uppercase tracking-[0.2em] text-white/30 bg-black/20 px-2 py-1 rounded-full backdrop-blur-md border border-white/5 opacity-0 group-hover:opacity-100 transition-all duration-500 font-mono' }, 'LUMEN AUTHORITY']
-    ];
-  },
-});
 
 const CustomMention = Mention.extend({
   addAttributes() {
@@ -68,6 +37,8 @@ const CustomMention = Mention.extend({
 const extensions = [
   StarterKit.configure({ 
     codeBlock: false,
+    link: false,
+    underline: false,
     ...({ image: false } as any),
   }),
   LinkExt.configure({ 

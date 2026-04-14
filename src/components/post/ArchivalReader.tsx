@@ -7,55 +7,12 @@ import Underline from '@tiptap/extension-underline';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import { common, createLowlight } from 'lowlight';
 import Mention from '@tiptap/extension-mention';
-import { mergeAttributes, Node } from '@tiptap/core';
+import { mergeAttributes } from '@tiptap/core';
 import Paragraph from '@tiptap/extension-paragraph';
 import { useMemo } from 'react';
+import { PersistentImage } from '@/lib/editor/persistent-image';
 
 const lowlight = createLowlight(common);
-
-// THE CORRECTED IMAGE NODE
-const PersistentImage = Node.create({
-  name: 'lumenImage',
-  group: 'block',
-  inline: false,
-  draggable: true,
-  addAttributes() {
-    return {
-      // We must whitelist every possible key Supabase or Tiptap might use
-      src: { 
-        default: null,
-      },
-      url: { 
-        default: null,
-      },
-      alt: { default: '' },
-      title: { default: '' },
-    };
-  },
-  parseHTML() {
-    return [{ tag: 'img' }];
-  },
-  addCommands() {
-    return {
-      setImage: (options: any) => ({ commands }: any) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: options,
-        });
-      },
-    } as any;
-  },
-  renderHTML({ node }) {
-    const finalSrc = node.attrs.src || node.attrs.url;
-    return ['div', { class: 'lumen-image-container lumen-shimmer relative my-16 group mx-auto max-w-4xl' }, 
-      ['img', {
-        src: finalSrc,
-        class: 'rounded-[32px] border border-border block w-full shadow-2xl transition-all duration-700 h-auto hover:scale-[1.01]',
-      }],
-      ['div', { class: 'absolute top-6 right-6 text-[8px] font-black uppercase tracking-[0.3em] text-white/30 bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500' }, 'LUMEN AUTHORITY']
-    ];
-  },
-});
 
 const CustomMention = Mention.extend({
   addAttributes() {
@@ -106,10 +63,23 @@ function fixContentNodes(content: any) {
 }
 
 export function ArchivalReader({ content }: ArchivalReaderProps) {
+  console.log('[ArchivalReader] Received content:', content);
+  
+  // Log lumenImage nodes specifically
+  if (content?.content) {
+    content.content.forEach((node: any, idx: number) => {
+      if (node.type === 'lumenImage') {
+        console.log(`[ArchivalReader] lumenImage node #${idx} attrs:`, node.attrs);
+      }
+    });
+  }
+
   const extensions = useMemo(() => [
     StarterKit.configure({
       codeBlock: false,
       paragraph: false,
+      link: false,
+      underline: false,
       ...({ image: false } as any), // CRITICAL: Disable built-in image to use PersistentImage
     }),
     CustomParagraph,
@@ -135,7 +105,15 @@ export function ArchivalReader({ content }: ArchivalReaderProps) {
       
       // Deep clone and normalize
       let doc = JSON.parse(JSON.stringify(content));
+      console.log('[ArchivalReader] Before fixContentNodes - lumenImage nodes:', 
+        doc.content?.filter((n: any) => n.type === 'lumenImage').map((n: any) => ({ type: n.type, hasAttrs: !!n.attrs, attrs: n.attrs }))
+      );
+      
       doc = fixContentNodes(doc);
+      
+      console.log('[ArchivalReader] After fixContentNodes - lumenImage nodes:', 
+        doc.content?.filter((n: any) => n.type === 'lumenImage').map((n: any) => ({ type: n.type, hasAttrs: !!n.attrs, attrs: n.attrs }))
+      );
       
       // Fix for data that isn't wrapped in a 'doc'
       if (typeof doc === 'object' && doc.type !== 'doc') {
@@ -145,6 +123,7 @@ export function ArchivalReader({ content }: ArchivalReaderProps) {
         };
       }
       
+      console.log('[ArchivalReader] About to call generateHTML with doc:', doc);
       return generateHTML(doc, extensions);
     } catch (err) {
       console.error('Archival Reader Error:', err);

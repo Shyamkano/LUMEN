@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { mergeAttributes, Node } from '@tiptap/core';
+import { mergeAttributes } from '@tiptap/core';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -15,6 +15,7 @@ import { AIAssistant } from '@/components/editor/AIAssistant';
 import { AudioUploader } from '@/components/editor/AudioUploader';
 import { ImageUploader } from '@/components/editor/ImageUploader';
 import { DraftManager } from '@/components/editor/DraftManager';
+import { PersistentImage } from '@/lib/editor/persistent-image';
 
 import { Button } from '@/components/ui';
 import { createPost, getPostById, updatePost } from '@/app/actions/posts';
@@ -105,55 +106,13 @@ function fixContentNodes(content: any) {
   return content;
 }
 
-// FIXED IMAGE NODE
-const PersistentImage = Node.create({
-  name: 'lumenImage',
-  group: 'block',
-  inline: false,
-  draggable: true,
-  addAttributes() {
-    return {
-      src: { 
-        default: null,
-        parseHTML: element => element.getAttribute('src') || element.getAttribute('url'),
-      },
-      url: { 
-        default: null,
-      },
-      alt: { default: null },
-      title: { default: null },
-    };
-  },
-  parseHTML() {
-    return [{ tag: 'img' }];
-  },
-  addCommands() {
-    return {
-      setImage: (options: any) => ({ commands }: any) => {
-        return commands.insertContent({
-          type: this.name,
-          attrs: options,
-        });
-      },
-    } as any;
-  },
-  renderHTML({ node }) {
-    const finalSrc = node.attrs.src || node.attrs.url;
-    return ['div', { class: 'lumen-image-container lumen-shimmer relative my-16 group mx-auto max-w-4xl' }, 
-      ['img', {
-        src: finalSrc,
-        class: 'rounded-[32px] border border-border block w-full shadow-2xl transition-all duration-700 h-auto hover:scale-[1.01]',
-      }],
-      ['div', { class: 'absolute top-6 right-6 text-[8px] font-black uppercase tracking-[0.3em] text-white/30 bg-black/20 px-3 py-1.5 rounded-full backdrop-blur-md border border-white/10 opacity-0 group-hover:opacity-100 transition-all duration-500 font-mono' }, 'LUMEN AUTHORITY']
-    ];
-  },
-});
-
 const GLOBAL_TIPTAP_EXTENSIONS = [
   StarterKit.configure({
     codeBlock: false,
     heading: { levels: [1, 2, 3, 4] },
     paragraph: false,
+    link: false,
+    underline: false,
     ...({ image: false } as any),
   }),
   CustomParagraph,
@@ -210,7 +169,26 @@ export default function EditorWorkspace() {
     content: undefined,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      setValue('content', editor.getJSON());
+      const json = editor.getJSON();
+      
+      // Log all lumenImage nodes with their attributes
+      const logNodes = (nodes: any[], depth = 0) => {
+        (nodes || []).forEach((node, idx) => {
+          if (node.type === 'lumenImage') {
+            console.log(
+              `[${'  '.repeat(depth)}lumenImage #${idx}] attrs:`,
+              JSON.stringify(node.attrs || {}),
+              '| has src?', !!node.attrs?.src,
+              '| has url?', !!node.attrs?.url
+            );
+          }
+          if (node.content) logNodes(node.content, depth + 1);
+        });
+      };
+      
+      logNodes(json.content || []);
+      console.log('[EditorWorkspace] Full JSON:', JSON.stringify(json, null, 2));
+      setValue('content', json);
     },
     editorProps: {
       attributes: {
@@ -309,16 +287,20 @@ export default function EditorWorkspace() {
   const content = watch('content');
 
   const handleSaveDraft = async () => {
+    console.log('[EditorWorkspace] Saving draft with content:', JSON.stringify(content, null, 2));
+    // CRITICAL FIX: Ensure content is a plain serializable object
+    const plainContent = JSON.parse(JSON.stringify(content));
     const result = await saveDraft({
       id: draftId || undefined,
       title: title || null,
-      content: content as Record<string, unknown>,
+      content: plainContent as Record<string, unknown>,
       type: postType,
       code_snippets: codeSnippets,
     });
     if (result.draftId) {
       setDraftId(result.draftId);
       setLastSaved(new Date().toLocaleTimeString());
+      console.log('[EditorWorkspace] Draft saved successfully');
     }
   };
 
@@ -342,11 +324,57 @@ export default function EditorWorkspace() {
     setLoading(true);
     setServerError(null);
 
+    // CRITICAL: Log the exact state BEFORE any server action call
+    console.log('[EditorWorkspace] Form data keys:', Object.keys(data));
+    console.log('[EditorWorkspace] data.content type:', typeof data.content);
+    console.log('[EditorWorkspace] data.content.type:', data.content?.type);
+    
+    // Deep inspect the lumenImage nodes
+    if (data.content?.content) {
+      data.content.content.forEach((node: any, idx: number) => {
+        if (node.type === 'lumenImage') {
+          console.log(`[EditorWorkspace] lumenImage #${idx}:`, {
+            type: node.type,
+            hasAttrs: !!node.attrs,
+            attrsType: typeof node.attrs,
+            attrsKeys: node.attrs ? Object.keys(node.attrs) : [],
+            attrsIsObject: node.attrs && typeof node.attrs === 'object',
+            attrsIsPlainObject: node.attrs && Object.prototype.toString.call(node.attrs) === '[object Object]',
+            attrs: node.attrs,
+            rawAttrs: JSON.stringify(node.attrs),
+          });
+          
+          // Test if attrs is serializable
+          try {
+            const serialized = JSON.stringify(node.attrs);
+            const deserialized = JSON.parse(serialized);
+            console.log(`[EditorWorkspace] Serialization test PASSED:`, deserialized);
+          } catch (e) {
+            console.error(`[EditorWorkspace] Serialization test FAILED:`, e);
+          }
+        }
+      });
+    }
+    
+    // Test full content serialization
+    try {
+      const contentStr = JSON.stringify(data.content);
+      console.log('[EditorWorkspace] Full content serializes OK, length:', contentStr.length);
+      const parsed = JSON.parse(contentStr);
+      console.log('[EditorWorkspace] After serialize/deserialize:', parsed);
+    } catch (e) {
+      console.error('[EditorWorkspace] Content serialization FAILED:', e);
+    }
+
     try {
       if (isEditingExisting && existingPostId) {
+        // CRITICAL FIX: Ensure content is a plain serializable object
+        // editor.getJSON() may return Proxies that RSC cannot serialize properly
+        const plainContent = JSON.parse(JSON.stringify(data.content));
+        
         const result = await updatePost(existingPostId, {
           title: data.title || undefined,
-          content: data.content as Record<string, unknown>,
+          content: plainContent as Record<string, unknown>,
           status: 'published',
           tags,
           cover_image: coverImage,
@@ -360,9 +388,13 @@ export default function EditorWorkspace() {
           router.push(`/post/${result.slug}`);
         }
       } else {
+        // CRITICAL FIX: Ensure content is a plain serializable object
+        // editor.getJSON() may return Proxies that RSC cannot serialize properly
+        const plainContent = JSON.parse(JSON.stringify(data.content));
+        
         const result = await createPost({
           title: data.title,
-          content: data.content as Record<string, unknown>,
+          content: plainContent as Record<string, unknown>,
           type: postType,
           is_anonymous: isAnonymous,
           status: 'published',

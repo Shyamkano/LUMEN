@@ -44,7 +44,9 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
 
   const handleImageSubmit = () => {
     if (imageUrl) {
-      (editor.chain().focus() as any).setImage({ src: imageUrl }).run();
+      console.log('[EditorToolbar] Calling setImage with URL:', imageUrl);
+      const result = (editor.chain().focus() as any).setImage({ src: imageUrl }).run();
+      console.log('[EditorToolbar] setImage result:', result);
       if (imageCredit) {
         editor.chain().focus().insertContent({
           type: 'paragraph',
@@ -81,7 +83,9 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
         throw new Error(errorData.error || 'Upload failed');
       }
       const data = await res.json();
-      (editor.chain().focus() as any).setImage({ src: data.url }).run();
+      console.log('[EditorToolbar] Upload successful, URL:', data.url);
+      const result = (editor.chain().focus() as any).setImage({ src: data.url }).run();
+      console.log('[EditorToolbar] setImage call for uploaded file result:', result);
       setShowImageModal(false);
     } catch (err: any) {
       alert(`Upload failed: ${err.message}`);
