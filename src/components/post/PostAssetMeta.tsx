@@ -79,13 +79,13 @@ export function PostAssetMeta({ postId, slug, healthStatus, validationScore, isA
   const StatusIcon = status.icon;
 
   return (
-    <div className="flex flex-col gap-6 p-8 rounded-[2.5rem] border border-border bg-white shadow-xl shadow-black/5">
+    <div className="flex flex-col gap-6 p-8 rounded-[2.5rem] border border-border bg-card shadow-xl shadow-black/5 transition-colors">
       <div className="flex flex-col gap-4">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <StatusIcon className={status.color} size={18} />
-              <span className="text-xs font-black uppercase tracking-widest">{status.label}</span>
+              <span className="text-xs font-black uppercase tracking-widest text-foreground">{status.label}</span>
             </div>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-relaxed">
               Resonance Score: <span className="text-foreground">{validationScore}%</span> Community Faith
@@ -98,13 +98,13 @@ export function PostAssetMeta({ postId, slug, healthStatus, validationScore, isA
                 onClick={handleFork} 
                 disabled={forking}
                 variant="outline" 
-                className="rounded-full h-10 px-6 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-black hover:text-white transition-all shadow-sm"
+                className="rounded-full h-10 px-6 text-[10px] font-black uppercase tracking-widest gap-2 hover:bg-foreground hover:text-background transition-all shadow-sm border-border"
               >
                 {forking ? <Loader2 size={14} className="animate-spin" /> : <GitBranch size={14} />}
                 Remix Asset
               </Button>
             ) : (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-amber-100 bg-amber-50 text-[9px] font-black uppercase tracking-widest text-amber-700">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-amber-500/20 bg-amber-500/10 text-[9px] font-black uppercase tracking-widest text-amber-600">
                 <Lock size={12} /> Asset Locked
               </div>
             )
@@ -112,17 +112,17 @@ export function PostAssetMeta({ postId, slug, healthStatus, validationScore, isA
         </div>
 
         {legacySplit && (legacySplit.remixerPercentage > 0 || legacySplit.originalPercentage > 0) && (
-          <div className="flex items-center gap-2 p-3 rounded-2xl bg-zinc-50 border border-zinc-100 animate-reveal">
+          <div className="flex items-center gap-2 p-3 rounded-2xl bg-muted/30 border border-border/50 animate-reveal">
             <div className="flex -space-x-1.5">
-              <div className="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center border-2 border-white">
+              <div className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border-2 border-background">
                 <Crown size={12} className="text-amber-600" />
               </div>
-              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center border-2 border-white">
+              <div className="w-6 h-6 rounded-full bg-blue-500/20 flex items-center justify-center border-2 border-background">
                 <Zap size={12} className="text-blue-600" />
               </div>
             </div>
             <p className="text-[10px] font-black uppercase tracking-tight text-muted-foreground whitespace-nowrap">
-              <span className="text-amber-700">{legacySplit.originalPercentage}% Seed Legacy</span> / <span className="text-blue-700">{legacySplit.remixerPercentage}% Remix Expansion</span>
+              <span className="text-amber-600">{legacySplit.originalPercentage}% Seed Legacy</span> / <span className="text-blue-600">{legacySplit.remixerPercentage}% Remix Expansion</span>
             </p>
           </div>
         )}
@@ -137,7 +137,7 @@ export function PostAssetMeta({ postId, slug, healthStatus, validationScore, isA
             onClick={() => handleValidate(true)}
             disabled={validating !== null}
             variant="outline" 
-            className="h-12 rounded-2xl border-green-100 bg-green-50/30 text-green-700 hover:bg-green-100 gap-2 font-black uppercase tracking-widest text-[9px]"
+            className="h-12 rounded-2xl border-green-500/20 bg-green-500/5 text-green-600 hover:bg-green-500/10 gap-2 font-black uppercase tracking-widest text-[9px]"
           >
             {validating === true ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
             Still Works
@@ -146,7 +146,7 @@ export function PostAssetMeta({ postId, slug, healthStatus, validationScore, isA
             onClick={() => handleValidate(false)}
             disabled={validating !== null}
             variant="outline" 
-            className="h-12 rounded-2xl border-red-100 bg-red-50/30 text-red-700 hover:bg-red-100 gap-2 font-black uppercase tracking-widest text-[9px]"
+            className="h-12 rounded-2xl border-red-500/20 bg-red-500/5 text-red-600 hover:bg-red-500/10 gap-2 font-black uppercase tracking-widest text-[9px]"
           >
             {validating === false ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
             Needs Update
