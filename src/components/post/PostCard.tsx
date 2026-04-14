@@ -49,7 +49,7 @@ export function PostCard({ post }: { post: Post }) {
                 <img 
                   src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`} 
                   alt={`${post.anonymous_identity?.alias_name || 'Anonymous'} avatar`} 
-                  className="w-full h-full object-cover invert" 
+                  className="w-full h-full object-cover dark:invert" 
                 />
               ) : (
                 post.profile?.avatar_url
@@ -90,7 +90,7 @@ export function PostCard({ post }: { post: Post }) {
                   e.preventDefault();
                   setShowReport(true);
                 }}
-                className="p-2 rounded-full text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 transition-all"
+                className="p-2 rounded-full text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                 title="Report Signal"
               >
                 <Flag size={14} />
@@ -111,7 +111,7 @@ export function PostCard({ post }: { post: Post }) {
                   e.preventDefault();
                   setShowReport(true);
                 }}
-                className="p-2 rounded-full text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 transition-all"
+                className="p-2 rounded-full text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 transition-all border border-transparent hover:border-red-500/20"
                 title="Report Signal"
               >
                 <Flag size={14} />

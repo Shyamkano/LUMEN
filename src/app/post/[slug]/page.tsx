@@ -117,7 +117,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
 
   return (
-    <main className="min-h-screen bg-white text-black overflow-x-hidden">
+    <main className="min-h-screen bg-background text-foreground overflow-x-hidden transition-colors duration-500">
       <ReadingProgressBar />
       <ViewTracker postId={post.id} />
 
@@ -152,7 +152,7 @@ export default async function PostPage({ params }: PostPageProps) {
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-2">Management</span>
                   <Link href={`/post/${post.slug}/analytics`}>
-                    <Button variant="outline" className="h-10 w-10 p-0 rounded-full border-border hover:border-foreground">
+                    <Button variant="outline" className="h-10 w-10 p-0 rounded-full border-border hover:border-foreground bg-muted/5">
                       <TrendingUp size={16} />
                     </Button>
                   </Link>
@@ -172,10 +172,10 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="flex items-center gap-6 py-10 mb-16 border-y border-border">
             {post.is_anonymous ? (
               <Link href={`/alias/${encodeURIComponent(post.anonymous_identity?.alias_name || '')}`} className="shrink-0">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-black hover:scale-105 transition-transform shadow-lg shadow-foreground/5 lumen-shimmer">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden border border-border bg-background shadow-lg shadow-foreground/5 lumen-shimmer">
                   <img 
                     src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`}
-                    className="w-full h-full object-cover invert"
+                    className="w-full h-full object-cover dark:invert"
                     alt=""
                   />
                 </div>
@@ -208,7 +208,7 @@ export default async function PostPage({ params }: PostPageProps) {
                   <FollowButton 
                     followingId={post.author_id} 
                     initialIsFollowing={initialIsFollowing}
-                    className="rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest" 
+                    className="rounded-full px-4 py-1 text-[10px] font-black uppercase tracking-widest border-border hover:border-foreground" 
                   />
                 )}
               </div>
@@ -273,7 +273,7 @@ export default async function PostPage({ params }: PostPageProps) {
                     <span className="text-[10px] font-black font-mono text-foreground uppercase tracking-widest">{snippet.language}</span>
                     {snippet.title && <span className="text-xs font-bold text-muted-foreground italic">{snippet.title}</span>}
                   </div>
-                  <pre className="p-8 bg-black text-white text-sm font-mono overflow-x-auto leading-relaxed">
+                  <pre className="p-8 bg-zinc-950 text-indigo-300 text-sm font-mono overflow-x-auto leading-relaxed">
                     <code>{snippet.code}</code>
                   </pre>
                 </div>
@@ -296,7 +296,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Comments Section */}
           <div id="comments" className="mt-32 pt-16 border-t border-border">
-            <h3 className="text-3xl font-black mb-12 tracking-tight">Responses</h3>
+            <h3 className="text-3xl font-black mb-12 tracking-tight text-foreground">Responses</h3>
             <CommentSection postId={post.id} initialCount={post.comments_count || 0} />
           </div>
         </article>
@@ -309,13 +309,13 @@ export default async function PostPage({ params }: PostPageProps) {
                 {post.is_anonymous ? (
                   <img 
                     src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`}
-                    className="w-full h-full object-cover invert"
+                    className="w-full h-full object-cover dark:invert"
                     alt=""
                   />
                 ) : post.profile?.avatar_url ? (
                   <img src={post.profile.avatar_url} className="w-full h-full object-cover" alt="" />
                 ) : (
-                  authorName.charAt(0).toUpperCase()
+                  <span className="text-foreground">{authorName.charAt(0).toUpperCase()}</span>
                 )}
               </div>
             </div>

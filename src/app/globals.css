@@ -98,6 +98,24 @@ h6 {
   margin-bottom: 0.75rem;
 }
 
+.editor-content blockquote {
+  border-left: 4px solid var(--foreground);
+  padding: 1.5rem 2rem;
+  margin: 2rem 0;
+  background: var(--muted);
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.8;
+  color: var(--foreground);
+  border-radius: 0 1rem 1rem 0;
+}
+
+/* Obsidian specific override for better visibility */
+[data-theme='dark'] .editor-content blockquote {
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: var(--foreground);
+}
+
 .editor-content h3 {
   font-size: 1.5rem;
   margin-top: 1.25rem;

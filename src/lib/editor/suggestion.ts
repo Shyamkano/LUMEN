@@ -6,9 +6,10 @@ import { MentionList } from '@/components/editor/MentionList';
 import { searchUsers } from '@/app/actions/profiles';
 
 export default {
+  char: '@',
   items: async ({ query }: { query: string }) => {
-    if (!query || query.length < 1) return [];
-    return await searchUsers(query);
+    // Return all or recent users if query is empty to show the list immediately
+    return await searchUsers(query || '');
   },
 
   render: () => {

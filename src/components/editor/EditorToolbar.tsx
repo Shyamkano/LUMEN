@@ -112,75 +112,75 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
       onClick={onClick}
       title={title}
       type="button"
-      className={`h-11 w-11 md:h-10 md:w-10 rounded-xl transition-colors duration-200 ${
+      className={`h-11 w-11 md:h-10 md:w-10 rounded-xl transition-all duration-300 ${
         active
-          ? 'bg-zinc-900 text-white shadow-lg shadow-zinc-200'
-          : 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100'
+          ? 'bg-foreground text-background shadow-2xl'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
       }`}
     >
       {children}
     </Button>
   );
 
-  const Divider = () => <div className="w-px h-5 bg-zinc-200 mx-1" />;
+  const Divider = () => <div className="w-px h-5 bg-border/40 mx-1" />;
 
   const insertionModal = (showLinkModal || showImageModal) && (
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       <div 
-        className="fixed inset-0 bg-black/95 backdrop-blur-2xl animate-reveal" 
+        className="fixed inset-0 bg-background/80 backdrop-blur-3xl animate-reveal" 
         onClick={() => { setShowLinkModal(false); setShowImageModal(false); }} 
       />
-      <div className="relative bg-white rounded-[3rem] shadow-[0_64px_256px_rgba(0,0,0,0.5)] p-8 md:p-14 w-full max-w-xl space-y-10 animate-scale-in flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="relative bg-card rounded-[3rem] shadow-[0_64px_256px_rgba(0,0,0,0.5)] border border-border/50 p-8 md:p-14 w-full max-w-xl space-y-10 animate-scale-in flex flex-col max-h-[90vh] overflow-hidden">
         <div className="space-y-3">
-          <div className="flex items-center gap-3 text-zinc-400">
+          <div className="flex items-center gap-3 text-muted-foreground">
             {showLinkModal && <Link2 size={24} />}
             {showImageModal && <ImageIcon size={24} />}
-            <h3 className="text-3xl font-black uppercase tracking-tighter text-zinc-900 leading-none">
+            <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground leading-none">
               {showLinkModal ? 'Designation' : 'Imagery'}
             </h3>
           </div>
-          <div className="h-1.5 w-16 bg-zinc-900 rounded-full" />
+          <div className="h-1.5 w-16 bg-foreground rounded-full" />
         </div>
 
         <div className="space-y-8 flex-1 overflow-y-auto no-scrollbar py-2">
           <div className="space-y-8">
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Resource URL</label>
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Resource URL</label>
               <input 
                 autoFocus
                 value={showLinkModal ? linkUrl : imageUrl}
                 onChange={(e) => showLinkModal ? setLinkUrl(e.target.value) : setImageUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full px-8 py-5 rounded-full border border-zinc-100 bg-zinc-50 text-sm font-medium focus:outline-none focus:border-zinc-900 transition-all font-mono"
+                className="w-full px-8 py-5 rounded-full border border-border bg-muted/20 text-foreground text-sm font-medium focus:outline-none focus:border-foreground transition-all font-mono"
               />
             </div>
 
             <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">
+              <label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
                 {showLinkModal ? 'Designated Name' : 'Archival Credit'}
               </label>
               <input 
                 value={showLinkModal ? linkText : imageCredit}
                 onChange={(e) => showLinkModal ? setLinkText(e.target.value) : setImageCredit(e.target.value)}
                 placeholder={showLinkModal ? "Display text..." : "Unsplash / Artist Name..."}
-                className="w-full px-8 py-5 rounded-full border border-zinc-100 bg-zinc-50 text-sm font-medium focus:outline-none focus:border-zinc-900 transition-all italic"
+                className="w-full px-8 py-5 rounded-full border border-border bg-muted/20 text-foreground text-sm font-medium focus:outline-none focus:border-foreground transition-all italic"
               />
             </div>
 
             {showImageModal && (
               <div className="space-y-6">
                 <div className="flex items-center gap-6">
-                  <div className="h-px flex-1 bg-zinc-100" />
-                  <span className="text-[9px] font-black text-zinc-300 uppercase tracking-widest">Local Cache</span>
-                  <div className="h-px flex-1 bg-zinc-100" />
+                  <div className="h-px flex-1 bg-border/40" />
+                  <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Local Cache</span>
+                  <div className="h-px flex-1 bg-border/40" />
                 </div>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploading}
-                  className="w-full h-20 flex items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-zinc-200 text-zinc-400 hover:border-zinc-900 hover:text-zinc-900 transition-all text-xs font-black uppercase tracking-widest disabled:opacity-50 group"
+                  className="w-full h-20 flex items-center justify-center gap-4 rounded-[2rem] border-2 border-dashed border-border text-muted-foreground hover:border-foreground hover:text-foreground transition-all text-xs font-black uppercase tracking-widest disabled:opacity-50 group bg-muted/5"
                 >
-                  <div className="w-12 h-12 rounded-full bg-zinc-50 group-hover:bg-zinc-900 group-hover:text-white flex items-center justify-center transition-all">
+                  <div className="w-12 h-12 rounded-full bg-muted group-hover:bg-foreground group-hover:text-background flex items-center justify-center transition-all">
                     <Upload size={18} />
                   </div>
                   {isUploading ? 'Uploading...' : 'Access Filesystem'}
@@ -192,11 +192,11 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
         </div>
 
         {!isUploading && (
-          <div className="flex flex-col gap-4 pt-4 border-t border-zinc-50">
+          <div className="flex flex-col gap-4 pt-4 border-t border-border/20">
             <Button 
               type="button"
               onClick={showLinkModal ? handleLinkSubmit : handleImageSubmit}
-              className="w-full h-16 rounded-full bg-zinc-900 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-zinc-200"
+              className="w-full h-16 rounded-full bg-foreground text-background hover:opacity-90 font-black uppercase tracking-widest text-xs shadow-2xl transition-all"
             >
               Execute Sync
             </Button>
@@ -204,7 +204,7 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
               type="button"
               variant="ghost" 
               onClick={() => { setShowLinkModal(false); setShowImageModal(false); }}
-              className="w-full h-12 rounded-full text-zinc-400 font-black uppercase tracking-widest text-[9px]"
+              className="w-full h-12 rounded-full text-muted-foreground hover:text-foreground font-black uppercase tracking-widest text-[9px]"
             >
               Abort Protocol
             </Button>
@@ -216,7 +216,7 @@ export function EditorToolbar({ editor, onOpenAI }: EditorToolbarProps) {
 
   return (
     <>
-      <div className="md:sticky md:top-32 md:z-50 md:bg-white/95 md:backdrop-blur-md md:border-b md:border-border md:shadow-md md:px-2 md:py-2 md:mb-4 flex items-center gap-1 overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap fixed bottom-0 left-0 right-0 z-[100] bg-white border-t p-3 shadow-[0_-8px_48px_rgba(0,0,0,0.1)] pb-safe md:w-full">
+      <div className="md:sticky md:top-32 md:z-50 md:bg-background/95 md:backdrop-blur-md md:border-b md:border-border md:shadow-md md:px-2 md:py-2 md:mb-4 flex items-center gap-1 overflow-x-auto no-scrollbar flex-nowrap md:flex-wrap fixed bottom-0 left-0 right-0 z-[100] bg-background border-t p-3 shadow-[0_-8px_48px_rgba(0,0,0,0.1)] pb-safe md:w-full">
         <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
           <Bold size={16} />
         </ToolBtn>
