@@ -18,35 +18,20 @@ import type { PostType, PostStatus } from '@/types';
 function normalizeContentForStorage(content: any, depth = 0): any {
   if (!content || typeof content !== 'object') return content;
   
-  const indent = '  '.repeat(depth);
-  
-  // Convert Server Component reference to plain object
   const plainContent = JSON.parse(JSON.stringify(content));
   
-  console.log(`${indent}[normalizeContentForStorage] [depth=${depth}] type=${plainContent.type}, hasAttrs=${!!plainContent.attrs}`);
-  
-  // Normalize image nodes
   if (plainContent.type === 'lumenImage') {
-    console.log(`${indent}  → Found lumenImage node!`);
     if (plainContent.attrs) {
-      console.log(`${indent}  ✓ attrs exist:`, JSON.stringify(plainContent.attrs));
-      // Ensure both src and url are set to the same value
       const imageUrl = plainContent.attrs.src || plainContent.attrs.url;
       if (imageUrl) {
         plainContent.attrs.src = imageUrl;
         plainContent.attrs.url = imageUrl;
-        console.log(`${indent}  ✓ Image attrs preserved - src/url set`);
       }
-    } else {
-      console.log(`${indent}  ❌ NO ATTRS on lumenImage node!`);
     }
   }
   
-  // Recursively process nested content
   if (plainContent.content && Array.isArray(plainContent.content)) {
-    console.log(`${indent}  Processing ${plainContent.content.length} child nodes`);
-    plainContent.content = plainContent.content.map((child: any, idx: number) => {
-      console.log(`${indent}  [${idx}] Processing child...`);
+    plainContent.content = plainContent.content.map((child: any) => {
       return normalizeContentForStorage(child, depth + 1);
     });
   }
@@ -64,6 +49,9 @@ export async function createPost(formData: {
   cover_image?: string | null;
   tags?: string[] | null;
   code_snippets?: { code: string; language: string; title?: string }[];
+  parent_id?: string | null;
+  is_forkable?: boolean;
+  resolved_request_id?: string;
 }) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -77,6 +65,9 @@ export async function createPost(formData: {
     is_anonymous = false, status = 'published',
     audio_url = null, cover_image = null,
     tags = [], code_snippets = [],
+    parent_id = null,
+    is_forkable = true,
+    resolved_request_id = null
   } = formData;
 
   console.log('[createPost] Received raw content:', JSON.stringify(rawContent, null, 2));
@@ -161,6 +152,9 @@ export async function createPost(formData: {
       cover_image,
       tags: Array.isArray(tags) ? tags : [],
       read_time,
+      parent_id: parent_id,
+      is_fork: !!parent_id,
+      is_forkable: is_forkable
     }])
     .select('id')
     .single();
@@ -241,9 +235,38 @@ export async function createPost(formData: {
     }
   }
 
+  // 4. Handle Request Resolution (If linked to a Signal Gap)
+  if (resolved_request_id && post?.id) {
+    // Audit check: Verify request is still open
+    const { data: request } = await supabase
+      .from('requests')
+      .select('requester_id, status')
+      .eq('id', resolved_request_id)
+      .single();
+
+    if (request && request.status === 'open') {
+      await supabase
+        .from('requests')
+        .update({
+          status: 'resolved',
+          resolved_post_id: post.id
+        })
+        .eq('id', resolved_request_id);
+    
+      // Notify the requester
+      await createNotification(
+        request.requester_id,
+        user.id,
+        'post',
+        post.id
+      );
+    }
+  }
+
   revalidatePath('/');
   revalidatePath('/feed');
   revalidatePath('/dashboard');
+  revalidatePath('/requests');
   
   return { success: true, slug };
 }
@@ -348,6 +371,57 @@ export async function updatePost(
   }
   
   return { success: true, slug: updatedPost?.slug };
+}
+
+export async function getPostLineage(postId: string) {
+  const supabase = await createClient();
+  
+  // 1. Get current post
+  const { data: current, error: currentError } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', postId)
+    .single();
+
+  if (currentError || !current) return null;
+
+  // Fetch current author info
+  const { data: currentAuthor } = await supabase.from('profiles').select('username, avatar_url').eq('id', current.author_id).single();
+  const currentWithAuthor = { ...current, author: currentAuthor };
+
+  // 2. Get parent (Seed)
+  let parent = null;
+  if (current.parent_id) {
+    const { data: p } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('id', current.parent_id)
+      .single();
+    
+    if (p) {
+      const { data: pAuthor } = await supabase.from('profiles').select('username, avatar_url').eq('id', p.author_id).single();
+      parent = { ...p, author: pAuthor };
+    }
+  }
+
+  // 3. Get children (Forks)
+  const { data: forks } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('parent_id', postId)
+    .order('created_at', { ascending: false });
+
+  // Fetch authors for all forks
+  const forksWithAuthors = await Promise.all((forks || []).map(async (fork) => {
+    const { data: fAuthor } = await supabase.from('profiles').select('username, avatar_url').eq('id', fork.author_id).single();
+    return { ...fork, author: fAuthor };
+  }));
+
+  return {
+    parent,
+    current: currentWithAuthor,
+    forks: forksWithAuthors
+  };
 }
 
 

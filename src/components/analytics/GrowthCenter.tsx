@@ -17,6 +17,7 @@ import {
 import { format, subDays, startOfDay } from 'date-fns';
 import Link from 'next/link';
 import { Button } from '@/components/ui';
+import { ImpactScale } from './ImpactScale';
 
 interface GrowthCenterProps {
   postId?: string;
@@ -230,6 +231,22 @@ export function GrowthCenter({ postId, isOverall }: GrowthCenterProps) {
               </Link>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Impact Scale (Collective Analytics) */}
+      {!isOverall && totals && (
+        <div className="space-y-8 pt-16 border-t border-border">
+          <div className="flex items-center gap-4">
+            <h2 className="text-3xl font-black tracking-tighter uppercase">Collective Influence</h2>
+            <div className="h-px flex-1 bg-border" />
+          </div>
+          <ImpactScale 
+            totalResonance={totals.resonance || 0}
+            forkCount={totals.forkCount || 0}
+            validationDensity={totals.validationDensity || 100}
+            reachNiches={totals.niches || []}
+          />
         </div>
       )}
     </div>

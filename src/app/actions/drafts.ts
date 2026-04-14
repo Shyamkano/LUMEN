@@ -43,6 +43,7 @@ export async function saveDraft(data: {
   content: Record<string, unknown> | null;
   type: PostType;
   code_snippets?: { code: string; language: string; title?: string }[];
+  parent_id?: string | null;
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -61,6 +62,7 @@ export async function saveDraft(data: {
         content: normalizedContent,
         type: data.type,
         code_snippets: data.code_snippets || [],
+        parent_id: data.parent_id,
         last_saved_at: new Date().toISOString(),
       })
       .eq('id', data.id)
@@ -83,6 +85,7 @@ export async function saveDraft(data: {
         content: normalizedContent,
         type: data.type,
         code_snippets: data.code_snippets || [],
+        parent_id: data.parent_id,
       }])
       .select('id')
       .single();

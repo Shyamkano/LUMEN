@@ -5,74 +5,86 @@
 </a>
 <h1 align="center">LUMEN</h1>
 <p align="center">
-An archival publishing network for radical thinkers. Synchronize stories, code, and digital narratives in high-fidelity monochrome. Live at <a href="https://lumen-archive.vercel.app/">lumen-archive.vercel.app</a>
+<b>A Collective Asset Infrastructure for High-Fidelity Information.</b> <br/> 
+Synchronize stories, code, and digital narratives across a lineage of network intelligence.
+<br/>
+Live at <a href="https://lumen-archive.vercel.app/">lumen-archive.vercel.app</a>
 </p>
+
 <p align="center">
-  <a href="#features">Features</a> •
-  <a href="#tech-stack">Tech Stack</a> •
-  <a href="#getting-started">Getting Started</a> •
-  <a href="#social-graph">Social Graph</a> •
-  <a href="#license">License</a>
+  <a href="#the-pillars">The Pillars</a> •
+  <a href="#narrative-genealogy">Genealogy</a> •
+  <a href="#the-pull-economy">Pull Economy</a> •
+  <a href="#intelligence-map">Intelligence Map</a> •
+  <a href="#tech-stack">Stack</a>
 </p>
 </div>
 
 ---
 
-## ⚡ Introducing LUMEN
-LUMEN is a **digital narrative platform** designed with a strict high-contrast monochrome design language ("Clean Canvas"). It is built for thinkers who value signal over noise.
-
-Current flagship instance: **[https://lumen-archive.vercel.app/](https://lumen-archive.vercel.app/)**
-
-## 🚀 Key Features
-
-* **Multi-Format Publishing:** 
-  * 🪶 **Blogs**: Traditional long-form articles with deep typography.
-  * ⚡ **Micro**: Fast thoughts for quick synchronization.
-  * 💻 **Code**: Share gists with full syntax highlighting.
-  * 🎙️ **Audio**: Upload voice logs with interactive players.
-* **Social Graph Synchronization:** 
-  * Follow other frequencies, build your network, and track your broadcast impact via the real-time Followers/Following engine.
-* **Premium Editorial Co-Pilot (Mistral AI):** 
-  * Select text and use the built-in AI assistant to refine grammar, suggest tags, or extend narratives.
-* **"Clean Canvas" Identity:** 
-  * Hardcoded high-contrast light mode using `Inter` and `Playfair Display`.
-* **Anonymous Identities:**
-  * Post thoughts via generated aliases without compromising your global identity.
-
-## 🛠 Tech Stack
-
-* **Frontend:** Next.js 16 (Turbopack) + React 19
-* **Styling:** Tailwind CSS v4 + Vanilla CSS
-* **Backend:** Supabase (Postgres, SSR Auth, Storage)
-* **Editor:** TipTap
-* **AI:** Mistral AI (AI-Assistants & Auto-tagging)
+## ⚡ The Vision
+LUMEN is not just a publishing platform; it is a **Collective Asset Infrastructure**. It shifts the focus from individual content ownership to **Network Resonance**. Built on a strict **"Archival Off-White"** design language, it provides an eye-safe, high-contrast environment for radical thinkers to build a perpetual library of human intelligence.
 
 ---
 
-## 📦 Getting Started
+## 🏛️ The Pillars of LUMEN
 
-### 1. Clone & Install
-```bash
-git clone https://github.com/Shyamkano/LUMEN.git
-cd LUMEN
-npm install
-```
+### 1. Narrative Genealogy (Forking & Remixing)
+LUMEN treats ideas as evolving assets.
+- **Genealogy Tree**: Track the lineage of every post. See how a "Seed Post" blooms into community-driven "Remixes."
+- **Legacy Score**: Automatically calculate the contribution of original authors vs. remixers, ensuring perpetual credit for foundational ideas.
 
-### 2. Environment Configuration
-Create `.env.local`:
+### 2. The Pull Economy (Signals & Gaps)
+Traditional platforms are "Push" based (post and hope). LUMEN implements a **Pull Economy**.
+- **Signal Gaps**: The community can signal "Requests" for knowledge missing in the network.
+- **Reward Protocol**: Stake points on gaps. Architects who "Construct Solutions" fulfill these requests and claim the collective bounty.
+
+### 3. Intelligence Map (Niche Heatmaps)
+A real-time visualization of the network's cognitive clusters.
+- **Resonance Intensity**: Browse the global map to see which topics are "Hot" vs. "Cold" based on real-time dwell stats.
+- **Opportunity Zones**: Identify niches with high requests but low post volume to find your next breakthrough.
+
+### 4. Personal Growth Center (Privacy-First)
+- **Deep Analytics**: Authors get exclusive access to "Dwell Time," "Viral Velocity," and "Resonance Tiers."
+- **Author Identity Isolation**: Analytics are strictly private to the author, while the "Impact Scale" and "Genealogy" remain public for community transparency.
+
+### 5. Shadow Protocol (Anonymous Identities)
+- **District Aliases**: Post high-risk or raw thoughts via hardened anonymous identities. 
+- **Isolated Reputation**: Build a separate reputation for your shadow identity that is cryptographically isolated from your public profile.
+
+---
+
+## 🛠 Tech Stack
+
+*   **Framework**: Next.js 16 (Turbopack) & React 19
+*   **Database**: Supabase (Hardened SQL with CHECK constraints & Secure RPCs)
+*   **Editor**: TipTap (Custom Persistent Image & Mention Engine)
+*   **Styling**: Tailwind CSS v4 + Archival Off-White System Variables
+*   **Intelligence**: Mistral AI Editorial Co-Pilot
+
+---
+
+## 📦 System Installation
+
+### 1. Environment Synchronization
+Configure your `.env.local` with the following variables:
 ```env
 NEXT_PUBLIC_SITE_URL=https://lumen-archive.vercel.app
-NEXT_PUBLIC_SUPABASE_URL=your_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
-MISTRAL_API_KEY=your_key
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+MISTRAL_API_KEY=your_mistral_api_key
 ```
 
-### 3. Database Sync
-1. Run the `supabase-schema.sql` in your Supabase SQL Editor.
-2. Ensure **Google OAuth** is enabled in Supabase Auth providers for seamless login.
+### 2. Database Hardening
+Run the provided `supabase-schema.sql` to initialize the collective asset pillars, including the `increment_post_views` and `track_daily_reach` security functions.
 
-## 🗄️ Social Graph & Automation
-LUMEN uses a dual-step verification process for social synchronization (Followers). This ensures data integrity and high-speed retrieval across the network.
+### 3. Start Local Sync
+```bash
+npm install
+npm run dev
+```
+
+---
 
 ## 🪪 License
-MIT License. Built by [Shyamkano](https://github.com/Shyamkano).
+Distributed under the MIT License. Built for the future of digital archival intelligence by [Shyamkano](https://github.com/Shyamkano).

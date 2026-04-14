@@ -10,6 +10,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { getSearchSuggestions } from '@/app/actions/profiles';
 import { getUnreadCount } from '@/app/actions/notifications';
 import { useQuery } from '@tanstack/react-query';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Navbar({ user }: { user: SupabaseUser | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -64,7 +65,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
   };
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-[100] bg-white/80 backdrop-blur-md border-b border-border h-16 md:h-20 flex items-center px-3 md:px-6 transition-all duration-300">
+      <header className="fixed top-0 left-0 right-0 z-[100] bg-background/80 backdrop-blur-md border-b border-border h-16 md:h-20 flex items-center px-3 md:px-6 transition-all duration-300">
         <div className="max-w-7xl mx-auto w-full flex justify-between items-center gap-2 md:gap-8">
 
           {/* Left: Logo & Hamburger */}
@@ -78,7 +79,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
             <Link
               href="/feed"
-              className="text-lg md:text-2xl font-black tracking-tighter text-black hover:opacity-70 transition-all uppercase shrink-0"
+              className="text-lg md:text-2xl font-black tracking-tighter text-foreground hover:opacity-70 transition-all uppercase shrink-0"
             >
               LUMEN <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse ml-1 inline-block" />
             </Link>
@@ -91,7 +92,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
           </div>
 
           {/* Center: Global Search (Adaptive) */}
-          <div ref={searchRef} className={`flex-1 max-w-3xl relative flex items-center justify-center transition-all duration-300 ${showMobileSearch ? 'absolute inset-x-0 bg-white px-4 h-full z-10' : 'relative'}`}>
+          <div ref={searchRef} className={`flex-1 max-w-3xl relative flex items-center justify-center transition-all duration-300 ${showMobileSearch ? 'absolute inset-x-0 bg-background px-4 h-full z-10' : 'relative'}`}>
             <form onSubmit={handleSearch} className={`${showMobileSearch ? 'w-full' : 'hidden md:block'} relative`}>
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <input
@@ -112,7 +113,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
             {/* Suggestions Dropdown (Shared) */}
             {searchOpen && (
-              <div className="absolute top-12 left-0 right-0 bg-white border border-border rounded-2xl shadow-2xl overflow-hidden py-4 animate-reveal max-h-[80vh] overflow-y-auto">
+              <div className="absolute top-12 left-0 right-0 bg-background border border-border rounded-2xl shadow-2xl overflow-hidden py-4 animate-reveal max-h-[80vh] overflow-y-auto">
                 {suggestions.users.length === 0 && suggestions.posts.length === 0 ? (
                   <div className="px-6 py-8 text-center text-muted-foreground">
                     <p className="text-[10px] font-black uppercase tracking-[0.2em]">Searching the Archive...</p>
@@ -158,7 +159,8 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
             {user && (
               <>
-                <Link href="/notifications" className="relative p-2 rounded-xl hover:bg-muted/50 transition-all text-black">
+                <ThemeToggle />
+                <Link href="/notifications" className="relative p-2 rounded-xl hover:bg-muted/50 transition-all text-foreground">
                   <Bell size={18} strokeWidth={2.5} />
                   {unreadCount && unreadCount > 0 ? (
                     <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full border border-white flex items-center justify-center animate-reveal">
@@ -170,7 +172,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                 </Link>
 
                 <Link href="/new">
-                  <Button className="rounded-full px-6 h-10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 bg-black text-white hover:bg-zinc-800 transition-all shadow-lg shadow-zinc-200">
+                  <Button className="rounded-full px-6 h-10 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 bg-foreground text-background hover:opacity-90 transition-all shadow-lg shadow-foreground/5">
                     <PenTool size={14} /> Write
                   </Button>
                 </Link>
@@ -181,7 +183,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                   </button>
                   {/* ... desktop dropdown ... */}
                   {menuOpen && (
-                    <div className="absolute right-0 top-12 w-64 bg-white rounded-[2rem] shadow-2xl border border-border py-2 animate-reveal-down overflow-hidden">
+                    <div className="absolute right-0 top-12 w-64 bg-background rounded-[2rem] shadow-2xl border border-border py-2 animate-reveal-down overflow-hidden">
                       <div className="px-6 py-4 border-b border-border/50 mb-2">
                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">Identity</p>
                         <p className="text-xs font-black text-black truncate">{user.email}</p>
@@ -198,6 +200,9 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                         </Link>
                         <Link href="/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
                           <Settings size={16} /> Settings
+                        </Link>
+                        <Link href="https://shyam-typeform.typeform.com/to/questions" target="_blank" className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-600 hover:bg-amber-50 rounded-xl transition-all">
+                          <Zap size={16} /> Network Feedback
                         </Link>
                       </div>
                       <div className="border-t border-border/50 mt-2 pt-2 px-2 pb-2">
@@ -228,7 +233,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
           onClick={() => setMobileMenuOpen(false)}
         />
         <div
-          className={`absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-white border-r border-border p-6 flex flex-col transition-transform duration-500 ease-expo ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-background border-r border-border p-6 flex flex-col transition-transform duration-500 ease-expo ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           <div className="flex justify-between items-center mb-10">
             <span className="text-xl font-black tracking-tighter uppercase">LUMEN</span>
@@ -266,6 +271,9 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                   </Link>
                   <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
                     <Settings size={18} /> Protocol
+                  </Link>
+                  <Link href="https://shyam-typeform.typeform.com/to/questions" target="_blank" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-amber-600">
+                    <Zap size={18} /> Transmission Feedback
                   </Link>
                 </div>
               )}

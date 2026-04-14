@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { mergeAttributes } from '@tiptap/core';
 import { useForm, Controller } from 'react-hook-form';
+import suggestion from '@/lib/editor/suggestion';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -23,7 +24,7 @@ import { saveDraft, getDraft, deleteDraft } from '@/app/actions/drafts';
 import { postSchema, type PostFormValues } from '@/lib/validations/post';
 import {
   Eye, FileText, Zap, Code, Mic, Ghost,
-  Send, ChevronDown, Loader2, X, Save
+  Send, ChevronDown, Loader2, X, Save, Lock, Unlock
 } from 'lucide-react';
 import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -121,21 +122,18 @@ const GLOBAL_TIPTAP_EXTENSIONS = [
     openOnClick: false,
     autolink: true,
     linkOnPaste: true,
-    HTMLAttributes: { class: 'text-foreground hover:opacity-70 underline underline-offset-4 decoration-2 font-bold transition-all' }
+    HTMLAttributes: { 
+      class: 'text-foreground hover:opacity-70 underline underline-offset-4 decoration-2 font-bold transition-all cursor-pointer',
+    }
   }),
   PersistentImage,
   Underline,
   CodeBlockLowlight.configure({ lowlight: createLowlight(common) }),
   CustomMention.configure({
     HTMLAttributes: {
-      class: 'mention bg-zinc-100/50 text-foreground px-1.5 py-0.5 rounded-md font-bold border border-border/50 hover:bg-foreground hover:text-background transition-colors cursor-pointer',
+      class: 'mention bg-zinc-100/50 dark:bg-zinc-800/50 text-foreground px-1.5 py-0.5 rounded-md font-bold border border-border/50 hover:bg-foreground hover:text-background transition-colors cursor-pointer',
     },
-    suggestion: {
-      items: async ({ query }: { query: string }) => {
-        if (!query || query.length < 1) return [];
-        return await searchUsers(query);
-      },
-    }
+    suggestion,
   }),
   CharacterCount,
 ];
@@ -163,6 +161,13 @@ export default function EditorWorkspace() {
   const [authorProfile, setAuthorProfile] = useState<any>(null);
   const [shadowIdentity, setShadowIdentity] = useState<any>(null);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [parentId, setParentId] = useState<string | null>(null);
+  const [isForkable, setIsForkable] = useState(true);
+  const [targetRequestId, setTargetRequestId] = useState<string | null>(null);
+  const [openRequests, setOpenRequests] = useState<any[]>([]);
+  const [showRequestSelector, setShowRequestSelector] = useState(false);
+
+  const syncRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor({
     extensions: GLOBAL_TIPTAP_EXTENSIONS,
@@ -171,24 +176,11 @@ export default function EditorWorkspace() {
     onUpdate: ({ editor }) => {
       const json = editor.getJSON();
       
-      // Log all lumenImage nodes with their attributes
-      const logNodes = (nodes: any[], depth = 0) => {
-        (nodes || []).forEach((node, idx) => {
-          if (node.type === 'lumenImage') {
-            console.log(
-              `[${'  '.repeat(depth)}lumenImage #${idx}] attrs:`,
-              JSON.stringify(node.attrs || {}),
-              '| has src?', !!node.attrs?.src,
-              '| has url?', !!node.attrs?.url
-            );
-          }
-          if (node.content) logNodes(node.content, depth + 1);
-        });
-      };
-      
-      logNodes(json.content || []);
-      console.log('[EditorWorkspace] Full JSON:', JSON.stringify(json, null, 2));
-      setValue('content', json);
+      // Synchronization Throttle: Prevents render blocking during high-velocity input
+      if (syncRef.current) clearTimeout(syncRef.current);
+      syncRef.current = setTimeout(() => {
+        setValue('content', json);
+      }, 400); // 400ms threshold for fluid input
     },
     editorProps: {
       attributes: {
@@ -200,18 +192,44 @@ export default function EditorWorkspace() {
 
   // Fetch Author Identity
   useEffect(() => {
+    let isMounted = true;
     async function fetchIdentity() {
+      // Small delay to prevent lock contention with Navbar
+      await new Promise(r => setTimeout(r, 100));
+      if (!isMounted) return;
+
       const { createClient } = await import('@/lib/supabase/client');
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-        const { data: anon } = await supabase.from('anonymous_identities').select('*').eq('user_id', user.id).single();
-        setAuthorProfile(profile);
-        setShadowIdentity(anon);
+      
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user && isMounted) {
+          const [{ data: profile }, { data: anon }] = await Promise.all([
+            supabase.from('profiles').select('*').eq('id', user.id).single(),
+            supabase.from('anonymous_identities').select('*').eq('user_id', user.id).single()
+          ]);
+          
+          if (isMounted) {
+            setAuthorProfile(profile);
+            setShadowIdentity(anon);
+          }
+        }
+      } catch (err) {
+        console.warn('Auth identity check failed (possibly lock contention):', err);
       }
     }
     fetchIdentity();
+
+    // Fetch Open Requests (Signal Gaps)
+    async function fetchRequests() {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data } = await supabase.from('post_requests').select('*').eq('status', 'open').order('created_at', { ascending: false });
+      setOpenRequests(data || []);
+    }
+    fetchRequests();
+
+    return () => { isMounted = false; };
   }, []);
 
   const handleAddTag = (e: React.KeyboardEvent) => {
@@ -287,7 +305,7 @@ export default function EditorWorkspace() {
   const content = watch('content');
 
   const handleSaveDraft = async () => {
-    console.log('[EditorWorkspace] Saving draft with content:', JSON.stringify(content, null, 2));
+    // Synchronization checkpoint
     // CRITICAL FIX: Ensure content is a plain serializable object
     const plainContent = JSON.parse(JSON.stringify(content));
     const result = await saveDraft({
@@ -296,11 +314,11 @@ export default function EditorWorkspace() {
       content: plainContent as Record<string, unknown>,
       type: postType,
       code_snippets: codeSnippets,
+      parent_id: parentId,
     });
     if (result.draftId) {
       setDraftId(result.draftId);
       setLastSaved(new Date().toLocaleTimeString());
-      console.log('[EditorWorkspace] Draft saved successfully');
     }
   };
 
@@ -318,53 +336,16 @@ export default function EditorWorkspace() {
     if (draft.code_snippets && Array.isArray(draft.code_snippets)) {
       setCodeSnippets(draft.code_snippets as any);
     }
+    if (draft.parent_id) {
+      setParentId(draft.parent_id);
+    }
   };
 
   async function onSubmit(data: PostFormValues) {
     setLoading(true);
     setServerError(null);
 
-    // CRITICAL: Log the exact state BEFORE any server action call
-    console.log('[EditorWorkspace] Form data keys:', Object.keys(data));
-    console.log('[EditorWorkspace] data.content type:', typeof data.content);
-    console.log('[EditorWorkspace] data.content.type:', data.content?.type);
-    
-    // Deep inspect the lumenImage nodes
-    if (data.content?.content) {
-      data.content.content.forEach((node: any, idx: number) => {
-        if (node.type === 'lumenImage') {
-          console.log(`[EditorWorkspace] lumenImage #${idx}:`, {
-            type: node.type,
-            hasAttrs: !!node.attrs,
-            attrsType: typeof node.attrs,
-            attrsKeys: node.attrs ? Object.keys(node.attrs) : [],
-            attrsIsObject: node.attrs && typeof node.attrs === 'object',
-            attrsIsPlainObject: node.attrs && Object.prototype.toString.call(node.attrs) === '[object Object]',
-            attrs: node.attrs,
-            rawAttrs: JSON.stringify(node.attrs),
-          });
-          
-          // Test if attrs is serializable
-          try {
-            const serialized = JSON.stringify(node.attrs);
-            const deserialized = JSON.parse(serialized);
-            console.log(`[EditorWorkspace] Serialization test PASSED:`, deserialized);
-          } catch (e) {
-            console.error(`[EditorWorkspace] Serialization test FAILED:`, e);
-          }
-        }
-      });
-    }
-    
-    // Test full content serialization
-    try {
-      const contentStr = JSON.stringify(data.content);
-      console.log('[EditorWorkspace] Full content serializes OK, length:', contentStr.length);
-      const parsed = JSON.parse(contentStr);
-      console.log('[EditorWorkspace] After serialize/deserialize:', parsed);
-    } catch (e) {
-      console.error('[EditorWorkspace] Content serialization FAILED:', e);
-    }
+    // Finalizing narrative state
 
     try {
       if (isEditingExisting && existingPostId) {
@@ -402,6 +383,9 @@ export default function EditorWorkspace() {
           audio_url: audioUrl,
           cover_image: coverImage,
           code_snippets: codeSnippets,
+          parent_id: parentId,
+          is_forkable: isForkable,
+          resolved_request_id: targetRequestId || undefined,
         });
 
         if (result?.error) {
@@ -474,6 +458,53 @@ export default function EditorWorkspace() {
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowRequestSelector(!showRequestSelector)}
+                type="button"
+                className={`flex items-center gap-2 px-4 py-2 h-10 md:h-12 rounded-full text-[10px] font-black uppercase tracking-widest border transition-all ${
+                  targetRequestId ? 'border-amber-400 bg-amber-50 text-amber-700 shadow-lg' : 'border-border hover:border-foreground text-muted-foreground'
+                }`}
+              >
+                <Zap size={14} />
+                <span>{targetRequestId ? 'Resolving Request' : 'Link Community Request'}</span>
+              </button>
+              
+              {showRequestSelector && (
+                <div className="absolute top-14 right-0 w-80 bg-background rounded-3xl shadow-[0_24px_64px_rgba(0,0,0,0.15)] border border-border py-4 z-50 animate-scale-in">
+                  <div className="px-6 pb-2 border-b border-border mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Open Community Requests</p>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto no-scrollbar">
+                    {openRequests.map(req => (
+                      <button
+                        key={req.id}
+                        type="button"
+                        onClick={() => { setTargetRequestId(req.id); setShowRequestSelector(false); }}
+                        className="w-full px-6 py-3 text-left hover:bg-muted/5 transition-all space-y-1"
+                      >
+                        <p className="text-xs font-black uppercase tracking-tight">{req.title}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground uppercase">{req.reward_points} pts reward</p>
+                      </button>
+                    ))}
+                    {openRequests.length === 0 && (
+                      <div className="px-6 py-4 italic text-[10px] text-muted-foreground uppercase">No open requests detected.</div>
+                    )}
+                  </div>
+                  {targetRequestId && (
+                    <div className="mt-4 px-6 pt-2 border-t border-border">
+                      <button 
+                         onClick={() => setTargetRequestId(null)} 
+                         className="text-[9px] font-black uppercase tracking-widest text-red-500 hover:text-red-700"
+                      >
+                        Disconnect Request
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <Button
               onClick={handleSubmit(onSubmit)}
               disabled={loading}
@@ -517,6 +548,19 @@ export default function EditorWorkspace() {
           >
             <Ghost size={12} />
             {isAnonymous ? 'Shadow Protocol Active' : 'Protocol: Public'}
+          </button>
+          
+          <button
+            onClick={() => setIsForkable(!isForkable)}
+            type="button"
+            className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border ${
+              isForkable
+                ? 'text-emerald-600 border-emerald-100 bg-emerald-50/30'
+                : 'text-amber-600 border-amber-100 bg-amber-50/30'
+            }`}
+          >
+            {isForkable ? <Unlock size={12} /> : <Lock size={12} />}
+            {isForkable ? 'Allow Remixing' : 'Asset Locked'}
           </button>
 
           {!isMicro && (

@@ -1,4 +1,5 @@
 import { getPostBySlug } from '@/app/actions/posts';
+import { PostAssetMeta } from '@/components/post/PostAssetMeta';
 import { checkUserLiked, checkUserBookmarked } from '@/app/actions/engagement';
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
@@ -249,10 +250,18 @@ export default async function PostPage({ params }: PostPageProps) {
           )}
 
 
-          {/* Content - Hardened via ArchivalReader */}
-          {contentObj && (
+          {/* Main Content Area */}
+          <div className="space-y-12">
+            <PostAssetMeta 
+              postId={post.id} 
+              slug={post.slug} 
+              healthStatus={post.health_status || 'certified'} 
+              validationScore={post.validation_score || 100}
+              isAuthor={isOwnPost}
+              isForkable={post.is_forkable ?? true}
+            />
             <ArchivalReader content={contentObj} />
-          )}
+          </div>
 
           {/* Code Snippets */}
           {post.code_snippets && post.code_snippets.length > 0 && (

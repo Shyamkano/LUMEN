@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Zap } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, Zap, Flag } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { toggleLike, toggleBookmark } from '@/app/actions/engagement';
+import ReportDialog from './ReportDialog';
 
 interface PostActionsProps {
   postId: string;
@@ -24,6 +25,7 @@ export function PostActions({
   const [liked, setLiked] = useState(initialLiked);
   const [bookmarked, setBookmarked] = useState(initialBookmarked);
   const [animating, setAnimating] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const handleLike = async () => {
     setAnimating(true);
@@ -108,6 +110,21 @@ export function PostActions({
         >
           <Bookmark size={18} className={bookmarked ? 'fill-zinc-900' : ''} />
         </Button>
+
+        <div className="w-px h-5 bg-zinc-200" />
+
+        {/* Report */}
+        <button 
+          onClick={() => setShowReport(true)}
+          className="flex items-center justify-center h-9 w-9 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all"
+          title="Report Signal"
+        >
+          <Flag size={16} />
+        </button>
+
+        {showReport && (
+          <ReportDialog postId={postId} onClose={() => setShowReport(false)} />
+        )}
       </div>
   );
 }

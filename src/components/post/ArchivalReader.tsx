@@ -63,16 +63,7 @@ function fixContentNodes(content: any) {
 }
 
 export function ArchivalReader({ content }: ArchivalReaderProps) {
-  console.log('[ArchivalReader] Received content:', content);
-  
-  // Log lumenImage nodes specifically
-  if (content?.content) {
-    content.content.forEach((node: any, idx: number) => {
-      if (node.type === 'lumenImage') {
-        console.log(`[ArchivalReader] lumenImage node #${idx} attrs:`, node.attrs);
-      }
-    });
-  }
+  // Internal metadata synchronization
 
   const extensions = useMemo(() => [
     StarterKit.configure({
@@ -85,8 +76,11 @@ export function ArchivalReader({ content }: ArchivalReaderProps) {
     CustomParagraph,
     Link.configure({
       openOnClick: true,
+      autolink: true,
       HTMLAttributes: {
-        class: 'text-foreground hover:opacity-70 underline underline-offset-4 decoration-2 font-bold transition-all',
+        class: 'text-foreground hover:opacity-70 underline underline-offset-4 decoration-2 font-black transition-all cursor-pointer',
+        target: '_blank',
+        rel: 'noopener noreferrer',
       },
     }),
     PersistentImage,
@@ -94,7 +88,7 @@ export function ArchivalReader({ content }: ArchivalReaderProps) {
     CodeBlockLowlight.configure({ lowlight }),
     CustomMention.configure({
       HTMLAttributes: {
-        class: 'mention-tag',
+        class: 'mention-tag font-black text-foreground hover:bg-foreground hover:text-background px-1.5 py-0.5 rounded-md border border-border/50 transition-all duration-300',
       },
     }),
   ], []);
@@ -105,15 +99,7 @@ export function ArchivalReader({ content }: ArchivalReaderProps) {
       
       // Deep clone and normalize
       let doc = JSON.parse(JSON.stringify(content));
-      console.log('[ArchivalReader] Before fixContentNodes - lumenImage nodes:', 
-        doc.content?.filter((n: any) => n.type === 'lumenImage').map((n: any) => ({ type: n.type, hasAttrs: !!n.attrs, attrs: n.attrs }))
-      );
-      
       doc = fixContentNodes(doc);
-      
-      console.log('[ArchivalReader] After fixContentNodes - lumenImage nodes:', 
-        doc.content?.filter((n: any) => n.type === 'lumenImage').map((n: any) => ({ type: n.type, hasAttrs: !!n.attrs, attrs: n.attrs }))
-      );
       
       // Fix for data that isn't wrapped in a 'doc'
       if (typeof doc === 'object' && doc.type !== 'doc') {
@@ -123,7 +109,7 @@ export function ArchivalReader({ content }: ArchivalReaderProps) {
         };
       }
       
-      console.log('[ArchivalReader] About to call generateHTML with doc:', doc);
+      // Producing high-fidelity HTML
       return generateHTML(doc, extensions);
     } catch (err) {
       console.error('Archival Reader Error:', err);
@@ -132,14 +118,16 @@ export function ArchivalReader({ content }: ArchivalReaderProps) {
   }, [content, extensions]);
 
   return (
-    <div className="reading-content ProseMirror prose prose-zinc max-w-none 
-      prose-p:text-zinc-800 prose-p:leading-[1.8] prose-p:text-base md:prose-p:text-lg
-      prose-headings:font-black prose-headings:tracking-tighter
+    <div className="reading-content article-resonance prose prose-zinc dark:prose-invert max-w-none 
+      prose-p:text-foreground/90 prose-p:leading-[1.8] prose-p:text-base md:prose-p:text-lg
+      prose-headings:font-black prose-headings:tracking-tighter prose-headings:text-foreground
+      prose-a:pointer-events-auto prose-a:relative prose-a:z-10
+      prose-a:decoration-foreground/30 hover:prose-a:decoration-foreground
       prose-strong:text-foreground prose-strong:font-black
       prose-blockquote:border-foreground prose-blockquote:font-serif prose-blockquote:italic prose-blockquote:text-lg
-      prose-pre:bg-[#0d1117] prose-pre:border prose-pre:border-border prose-pre:rounded-2xl
+      prose-pre:bg-card prose-pre:border prose-pre:border-border prose-pre:rounded-2xl
       prose-pre:p-0
-      prose-img:rounded-3xl prose-img:border prose-img:border-border lg:prose-xl selection:bg-black selection:text-white"
+      prose-img:rounded-3xl prose-img:border prose-img:border-border lg:prose-xl selection:bg-foreground selection:text-background"
       dangerouslySetInnerHTML={{ __html: htmlContent }}
     />
   );

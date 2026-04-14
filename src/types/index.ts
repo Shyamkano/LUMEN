@@ -31,6 +31,11 @@ export interface Post {
   tags: string[] | null;
   read_time: number | null;
   views: number;
+  parent_id?: string | null;
+  is_fork?: boolean;
+  validation_score?: number;
+  health_status?: string;
+  is_forkable?: boolean;
   created_at: string;
   updated_at: string;
   // Joined
@@ -102,6 +107,7 @@ export interface Draft {
   type: PostType;
   tags?: string[];
   code_snippets?: { code: string; language: string; title?: string }[];
+  parent_id?: string | null;
   last_saved_at: string;
   created_at: string;
 }
@@ -150,4 +156,18 @@ export interface AICodeExplanation {
 export interface AIGrammarFix {
   corrected: string;
   changes: string[];
+}
+export interface PostRequest {
+  id: string;
+  requester_id: string;
+  title: string;
+  description: string | null;
+  niche: string | null;
+  reward_points: number;
+  status: 'open' | 'resolved' | 'closed';
+  resolved_post_id: string | null;
+  created_at: string;
+  tags?: string[];
+  // Joined
+  requester?: Profile | null;
 }

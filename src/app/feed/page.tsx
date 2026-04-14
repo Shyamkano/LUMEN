@@ -5,7 +5,7 @@ import { Button } from '@/components/ui';
 import { createClient } from '@/lib/supabase/server';
 import type { Post } from '@/types';
 import { Suspense } from 'react';
-import { Loader2, PenTool, Zap, Code, Mic, TrendingUp } from 'lucide-react';
+import { Loader2, PenTool, Zap, Code, Mic, TrendingUp, ChevronRight } from 'lucide-react';
 
 
 import { UserSearchWidget } from '@/components/social/UserSearchWidget';
@@ -31,8 +31,8 @@ export default async function FeedPage() {
         <PenTool size={22} strokeWidth={3} />
       </Link> */}
       {/* Background Glows for 'Shine' */}
-      <div className="absolute -top-24 -left-24 w-64 md:w-96 h-64 md:h-96 bg-foreground/5 blur-[120px] rounded-full pointer-events-none animate-pulse" />
-      <div className="absolute top-1/2 -right-24 w-48 md:w-64 h-48 md:h-64 bg-foreground/5 blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute -top-24 -left-24 w-64 md:w-96 h-64 md:h-96 bg-foreground/[0.03] blur-[60px] rounded-full pointer-events-none" />
+      <div className="absolute top-1/2 -right-24 w-48 md:w-64 h-48 md:h-64 bg-foreground/[0.02] blur-[40px] rounded-full pointer-events-none" />
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10 md:gap-16 relative py-8 md:py-12">
         <div className="space-y-10 md:space-y-12">
@@ -84,6 +84,29 @@ export default async function FeedPage() {
               </Link>
             </article>
           )}
+
+          {/* Network Map CTA */}
+          <Link href="/map" className="block animate-reveal">
+            <div className="relative p-6 rounded-[2rem] bg-zinc-900 overflow-hidden group hover:scale-[1.02] transition-all duration-500 shadow-2xl shadow-black/10">
+               {/* Background Glow */}
+               <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-[60px] group-hover:bg-emerald-500/30 transition-colors" />
+               
+               <div className="relative z-10 space-y-4">
+                  <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 w-fit backdrop-blur-md">
+                    <TrendingUp size={10} className="text-emerald-400" />
+                    <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white">Live Intelligence</span>
+                  </div>
+                  
+                  <h3 className="text-2xl font-black text-white tracking-tighter uppercase leading-tight">
+                    Intelligence <br /> Map
+                  </h3>
+                  
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest flex items-center gap-2">
+                    Explore Niche Heatmaps <ChevronRight size={10} />
+                  </p>
+               </div>
+            </div>
+          </Link>
 
           {/* Trending Posts Widget */}
           <div className="space-y-8">

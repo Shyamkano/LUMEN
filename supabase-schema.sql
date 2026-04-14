@@ -31,6 +31,12 @@ CREATE TABLE IF NOT EXISTS posts (
   tags TEXT[] DEFAULT '{}',
   read_time INTEGER,
   views INTEGER DEFAULT 0,
+  -- Collective Asset Pillars
+  parent_id UUID REFERENCES posts(id) ON DELETE SET NULL, -- Forking
+  is_fork BOOLEAN DEFAULT FALSE,
+  validation_score INTEGER DEFAULT 100 CHECK (validation_score >= 0 AND validation_score <= 100), -- Proof of Life health
+  health_status TEXT DEFAULT 'certified' CHECK (health_status IN ('certified', 'stale', 'archived')), -- 'certified', 'stale', 'archived'
+  is_forkable BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -105,6 +111,7 @@ CREATE TABLE IF NOT EXISTS drafts (
   type TEXT NOT NULL DEFAULT 'blog' CHECK (type IN ('blog', 'micro', 'code', 'audio')),
   tags TEXT[] DEFAULT '{}',
   code_snippets JSONB DEFAULT '[]'::jsonb,
+  parent_id UUID REFERENCES posts(id) ON DELETE SET NULL,
   last_saved_at TIMESTAMPTZ DEFAULT now(),
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -254,6 +261,45 @@ CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE U
 CREATE POLICY "Authors can view own post analytics" ON post_analytics FOR SELECT USING (
   EXISTS (SELECT 1 FROM posts WHERE posts.id = post_analytics.post_id AND posts.author_id = auth.uid())
 );
+
+-- ============= 11. Post Validations (Proof of Life) =============
+CREATE TABLE IF NOT EXISTS post_validations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  is_positive BOOLEAN DEFAULT TRUE, -- TRUE = Certified, FALSE = Outdated/Flagged
+  feedback TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(post_id, user_id)
+);
+
+-- ============= 12. Post Requests (The Pull Economy) =============
+CREATE TABLE IF NOT EXISTS post_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  requester_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  niche TEXT,
+  reward_points INTEGER DEFAULT 50 CHECK (reward_points >= 0),
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'resolved', 'closed')), -- 'open', 'resolved', 'closed'
+  resolved_post_id UUID REFERENCES posts(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indexes for the new pillars
+CREATE INDEX IF NOT EXISTS idx_posts_parent ON posts(parent_id);
+CREATE INDEX IF NOT EXISTS idx_post_requests_niche ON post_requests(niche);
+
+-- RLS for new tables
+ALTER TABLE post_validations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_requests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Everyone can view validations" ON post_validations FOR SELECT USING (true);
+CREATE POLICY "Users can validate" ON post_validations FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own validation" ON post_validations FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Everyone can view requests" ON post_requests FOR SELECT USING (true);
+CREATE POLICY "Users can create requests" ON post_requests FOR INSERT WITH CHECK (auth.uid() = requester_id);
 
 -- ============= TRIGGER: Auto-create profile on signup =============
 CREATE OR REPLACE FUNCTION handle_new_user()

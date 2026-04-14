@@ -11,14 +11,13 @@
 }
 
 :root {
-  color-scheme: light !important;
-  --background: #ffffff;
+  --background: #f4f4f5;
   --foreground: #000000;
   --card: #ffffff;
-  --card-border: #f8f8f8;
-  --muted: #fafafa;
+  --card-border: #e4e4e7;
+  --muted: #e4e4e7;
   --muted-foreground: #525252;
-  --border: #ececec;
+  --border: #d4d4d8;
   --accent: #111111;
   --accent-foreground: #ffffff;
 
@@ -26,6 +25,18 @@
   --font-serif: 'Playfair Display', serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+[data-theme='dark'] {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #141417;
+  --card-border: #27272a;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --border: #27272a;
+  --accent: #ffffff;
+  --accent-foreground: #000000;
 }
 
 
@@ -192,7 +203,7 @@ h6 {
 .lumen-shimmer {
   position: relative;
   overflow: hidden;
-  background-color: #f6f7f8;
+  background-color: #e4e4e7;
 }
 
 .lumen-shimmer::after {

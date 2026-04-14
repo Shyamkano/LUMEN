@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageCircle, Code, Mic, FileText, Zap, User, Eye } from 'lucide-react';
+import { Heart, MessageCircle, Code, Mic, FileText, Zap, User, Eye, Flag } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createExcerpt } from '@/lib/utils';
 import type { Post } from '@/types';
@@ -14,10 +15,13 @@ const TYPE_CONFIG = {
   audio: { icon: Mic, label: 'Voice', color: 'bg-muted/10 text-foreground border-border' },
 };
 
+import { GitFork } from 'lucide-react';
 import { FollowButton } from '@/components/social/FollowButton';
+import ReportDialog from './ReportDialog';
 
 export function PostCard({ post }: { post: Post }) {
   const router = useRouter();
+  const [showReport, setShowReport] = useState(false);
 
   const config = TYPE_CONFIG[post.type] || TYPE_CONFIG.blog;
   const TypeIcon = config.icon;
@@ -31,7 +35,7 @@ export function PostCard({ post }: { post: Post }) {
 
   return (
     <Link href={`/post/${post.slug}`} className="block group h-full">
-      <article className="relative h-full flex flex-col p-6 rounded-3xl border border-border/80 bg-white hover:border-black hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all duration-700 group-hover:-translate-y-1 group-active:scale-[0.98]">
+      <article className="relative h-full flex flex-col p-6 rounded-3xl border border-border/80 bg-card hover:border-foreground hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all duration-700 group-hover:-translate-y-1 group-active:scale-[0.98]">
 
         {/* Author row */}
         <div className="flex items-center justify-between mb-4">
@@ -44,12 +48,12 @@ export function PostCard({ post }: { post: Post }) {
               {post.is_anonymous ? (
                 <img 
                   src={`https://api.dicebear.com/7.x/${post.anonymous_identity?.district || 'identicon'}/svg?seed=${post.anonymous_identity?.avatar_seed || 'default'}&backgroundColor=000000`} 
-                  alt="" 
+                  alt={`${post.anonymous_identity?.alias_name || 'Anonymous'} avatar`} 
                   className="w-full h-full object-cover invert" 
                 />
               ) : (
                 post.profile?.avatar_url
-                  ? <img src={post.profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ? <img src={post.profile.avatar_url} alt={`${post.profile.full_name || 'Author'} avatar`} className="w-full h-full object-cover" />
                   : authorInitial
               )}
             </div>
@@ -80,13 +84,38 @@ export function PostCard({ post }: { post: Post }) {
           </div>
 
           {!post.is_anonymous && post.profile?.id && (
-            <div className="z-10 relative" onClick={(e) => e.stopPropagation()}>
+            <div className="z-10 relative flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowReport(true);
+                }}
+                className="p-2 rounded-full text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 transition-all"
+                title="Report Signal"
+              >
+                <Flag size={14} />
+              </button>
               <FollowButton 
                 followingId={post.profile.id} 
                 initialIsFollowing={(post as any).isFollowing}
                 showCount={false} 
                 className="h-7 px-3 text-[9px] font-black uppercase tracking-widest rounded-full border-border hover:bg-foreground hover:text-background" 
               />
+            </div>
+          )}
+
+          {post.is_anonymous && (
+            <div className="z-10 relative" onClick={(e) => e.stopPropagation()}>
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowReport(true);
+                }}
+                className="p-2 rounded-full text-muted-foreground/30 hover:text-red-500 hover:bg-red-50 transition-all"
+                title="Report Signal"
+              >
+                <Flag size={14} />
+              </button>
             </div>
           )}
         </div>
@@ -104,9 +133,17 @@ export function PostCard({ post }: { post: Post }) {
           )}
 
           {!(post.type === 'micro' && post.title.startsWith('Post ')) && (
-            <h2 className="text-xl font-black text-foreground leading-[1.2] tracking-tight group-hover:underline underline-offset-2 decoration-1 line-clamp-2">
-              {post.title}
-            </h2>
+            <div className="space-y-2">
+              <h2 className="text-xl font-black text-foreground leading-[1.2] tracking-tight group-hover:underline underline-offset-2 decoration-1 line-clamp-2">
+                {post.title}
+              </h2>
+              {post.is_fork && (
+                <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-blue-500">
+                  <GitFork size={10} />
+                  Remix
+                </div>
+              )}
+            </div>
           )}
 
           {excerpt && (
@@ -137,7 +174,7 @@ export function PostCard({ post }: { post: Post }) {
           </div>
           <div className="flex items-center gap-3 sm:gap-6 text-muted-foreground whitespace-nowrap">
             <span className="flex items-center gap-1 text-[10px] font-black">
-              <Eye size={14} className="group-hover:text-black transition-colors" />
+              <Eye size={14} className="group-hover:text-foreground transition-colors" />
               {post.views || 0}
             </span>
             <span className="flex items-center gap-1 text-[10px] font-black">
@@ -151,6 +188,9 @@ export function PostCard({ post }: { post: Post }) {
           </div>
         </div>
       </article>
+      {showReport && (
+        <ReportDialog postId={post.id} onClose={() => setShowReport(false)} />
+      )}
     </Link>
   );
 }

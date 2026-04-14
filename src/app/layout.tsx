@@ -4,26 +4,31 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
 
 
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | LUMEN",
-    default: "LUMEN | Digital Narrative Platform",
+    template: "%s | LUMEN Archive",
+    default: "LUMEN | Collective Asset Infrastructure",
   },
-  description: "A premium AI-powered space for radical thinkers to archive their luminous logs and stories.",
-  keywords: ["blogging", "AI editor", "digital narrative", "archival", "creative writing"],
-  authors: [{ name: "LUMEN Archive" }],
+  description: "Synchronize your intelligence. LUMEN is an archival digital publishing network for narrative genealogy, network resonance, and the pull economy.",
+  keywords: ["archival publishing", "collective assets", "narrative genealogy", "network intelligence", "pull economy", "lumen archive"],
+  authors: [{ name: "LUMEN Research" }],
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://lumen-archive.vercel.app",
     siteName: "LUMEN",
+    title: "LUMEN | Collective Asset Infrastructure",
+    description: "Build perpetual digital assets within a community of high-fidelity thinkers.",
   },
-  verification: {
-    google: "GSC_VERIFICATION_PLACEHOLDER_ADD_YOUR_CODE_HERE",
-  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LUMEN Archive",
+    description: "The archive for network intelligence and narrative resonance.",
+  }
 };
 
 
@@ -39,14 +44,16 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-white text-black selection:bg-black selection:text-white antialiased overflow-x-hidden" suppressHydrationWarning>
-        <QueryProvider>
-          <Navbar user={user} />
-          <main className="pt-20 pb-16">
-            {children}
-          </main>
-          <Footer />
-        </QueryProvider>
+      <body className="min-h-screen bg-background text-foreground selection:bg-black selection:text-white antialiased overflow-x-hidden" suppressHydrationWarning>
+        <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false}>
+          <QueryProvider>
+            <Navbar user={user} />
+            <main className="pt-20 pb-16">
+              {children}
+            </main>
+            <Footer />
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
 

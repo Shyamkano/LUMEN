@@ -1,8 +1,8 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
 import { createNotification } from './notifications';
+import { revalidatePath } from 'next/cache';
 
 export async function toggleLike(postId: string) {
   const supabase = await createClient();
@@ -175,23 +175,16 @@ export async function getUserBookmarks() {
 export async function trackView(postId: string) {
   const supabase = await createClient();
   
-  // 1. Increment total views on the post
-  // We use RPC for atomic increment if available, but falling back to manual for now
-  // Since we don't have the RPC defined in the DB yet, we'll try a simple update
-  // Ideal: supabase.rpc('increment_views', { post_id: postId })
-  
-  const { data: post, error: fetchError } = await supabase
-    .from('posts')
-    .select('views')
-    .eq('id', postId)
-    .single();
+  // 1. Increment total views on the post using the secure RPC
+  // This bypasses RLS and handles atomicity
+  const { error: rpcError } = await supabase.rpc('increment_post_views', { post_id_param: postId });
 
-  if (fetchError) return;
-
-  await supabase
-    .from('posts')
-    .update({ views: (post.views || 0) + 1 })
-    .eq('id', postId);
+  if (rpcError) {
+    console.warn('RPC View Increment failed, falling back:', rpcError);
+    // Use an UPSERT approach for the fallback to avoid race conditions
+    await supabase.rpc('increment_post_views_v2', { post_id_param: postId }); 
+    // If V2 RPC not available, the existing trackView logic below still handles daily stats
+  }
 
   // 2. Update daily analytics
   const today = new Date().toISOString().split('T')[0];
@@ -320,7 +313,7 @@ export async function getIndividualPostAnalytics(postId: string) {
   // 1. Verify ownership
   const { data: post } = await supabase
     .from('posts')
-    .select('id, title, author_id, views, created_at, slug')
+    .select('id, title, author_id, views, created_at, slug, validation_score, tags')
     .eq('id', postId)
     .single();
 
@@ -337,7 +330,23 @@ export async function getIndividualPostAnalytics(postId: string) {
     .gte('date', sixtyDaysAgo.toISOString().split('T')[0])
     .order('date', { ascending: true });
 
-  // 3. Aggregate totals
+  // 3. Get Genealogy Stats (Forks)
+  const { data: lineagePosts } = await supabase
+    .from('posts')
+    .select('id, views, validation_score')
+    .or(`id.eq.${postId},parent_id.eq.${postId}`);
+
+  const totalLineageViews = lineagePosts?.reduce((acc, p) => acc + (p.views || 0), 0) || 0;
+  const forkCount = (lineagePosts?.length || 1) - 1;
+
+  // 4. Get Total Resonance (Across the whole branch)
+  const lineageIds = lineagePosts?.map(p => p.id) || [postId];
+  const { count: globalLikes } = await supabase
+    .from('likes')
+    .select('id', { count: 'exact', head: true })
+    .in('post_id', lineageIds);
+
+  // 5. Aggregate totals
   const totalLikes = daily?.reduce((acc, d) => acc + (d.likes || 0), 0) || 0;
   const totalComments = daily?.reduce((acc, d) => acc + (d.comments || 0), 0) || 0;
   const totalTime = daily?.reduce((acc, d) => acc + (d.time_spent_seconds || 0), 0) || 0;
@@ -350,7 +359,255 @@ export async function getIndividualPostAnalytics(postId: string) {
       likes: totalLikes,
       comments: totalComments,
       timeSpent: totalTime,
-      avgTime: (post.views || 0) > 0 ? Math.round(totalTime / post.views) : 0
+      avgTime: (post.views || 0) > 0 ? Math.round(totalTime / post.views) : 0,
+      forkCount: forkCount,
+      resonance: totalLineageViews + (globalLikes || 0),
+      globalReach: totalLineageViews,
+      validationDensity: post.validation_score || 100,
+      niches: post.tags || []
     }
   };
+}
+
+export async function forkPost(postId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
+  // 1. Get original post
+  const { data: originalPost } = await supabase
+    .from('posts')
+    .select('*')
+    .eq('id', postId)
+    .single();
+
+  if (!originalPost) throw new Error('Original asset not found');
+  if (originalPost.health_status === 'archived') throw new Error('This asset is archived and cannot be remixed.');
+
+  // 2. Create entry in DRAFTS table (so editor can load it)
+  const { data: draft, error } = await supabase
+    .from('drafts')
+    .insert([{
+      user_id: user.id,
+      title: `Remix: ${originalPost.title}`,
+      content: originalPost.content,
+      type: originalPost.type,
+      tags: originalPost.tags || [],
+      cover_image: originalPost.cover_image,
+      parent_id: postId
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  // 3. Notify original author
+  await createNotification(
+    originalPost.author_id,
+    user.id,
+    'post',
+    postId // Link to original post
+  );
+
+  revalidatePath('/dashboard');
+  return draft;
+}
+
+export async function validatePost(postId: string, isPositive: boolean, feedback?: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
+  // 1. Record validation (Upsert to handle unique constraint)
+  const { error } = await supabase
+    .from('post_validations')
+    .upsert([{
+      post_id: postId,
+      user_id: user.id,
+      is_positive: isPositive,
+      feedback
+    }], { onConflict: 'post_id,user_id' });
+
+  if (error) throw error;
+
+  // 2. Recalculate health score
+  const { data: validations } = await supabase
+    .from('post_validations')
+    .select('is_positive')
+    .eq('post_id', postId);
+
+  if (validations && validations.length > 0) {
+    const positiveCount = validations.filter(v => v.is_positive).length;
+    const totalCount = validations.length;
+    const score = Math.round((positiveCount / totalCount) * 100);
+
+    let healthStatus = 'certified';
+    if (score < 40) healthStatus = 'archived';
+    else if (score < 70) healthStatus = 'stale';
+
+    await supabase
+      .from('posts')
+      .update({ 
+        validation_score: score,
+        health_status: healthStatus
+      })
+      .eq('id', postId);
+  }
+
+  revalidatePath(`/post/${postId}`);
+  return { success: true };
+}
+
+export async function calculateLegacyScore(postId: string) {
+  const supabase = await createClient();
+  
+  // 1. Get current post
+  const { data: current } = await supabase.from('posts').select('content, parent_id').eq('id', postId).single();
+  if (!current || !current.parent_id) return { originalPercentage: 100, remixerPercentage: 0 };
+
+  // 2. Get parent post
+  const { data: parent } = await supabase.from('posts').select('content').eq('id', current.parent_id).single();
+  if (!parent) return { originalPercentage: 100, remixerPercentage: 0 };
+
+  // 3. Narrative Identity Audit
+  // We compare stringified JSON to detect zero-effort forks
+  const parentContentStr = JSON.stringify(parent.content);
+  const currentContentStr = JSON.stringify(current.content);
+  
+  if (parentContentStr === currentContentStr) {
+    return { originalPercentage: 100, remixerPercentage: 0 };
+  }
+
+  // 4. Expansion Proportionality
+  // We measure the delta in narrative density (nodes)
+  const parentNodes = (parent.content as any)?.content?.length || 1;
+  const currentNodes = (current.content as any)?.content?.length || 1;
+
+  // Logic: The remixer only gains percentage for the NEW content they contribute
+  // Baseline original contribution is preserved
+  const addition = Math.max(0, currentNodes - parentNodes);
+  const remixerPercentage = Math.min(80, Math.max(5, Math.round((addition / currentNodes) * 100)));
+  const originalPercentage = 100 - remixerPercentage;
+
+  return {
+    originalPercentage,
+    remixerPercentage
+  };
+}
+
+export async function getNicheInsights() {
+  const supabase = await createClient();
+  
+  // 1. Get all recent public posts (last 30 days)
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('id, tags, views, is_fork')
+    .gte('created_at', thirtyDaysAgo.toISOString())
+    .eq('status', 'published');
+
+  if (!posts) return [];
+
+  // 2. Aggregate by tag
+  const nicheMap = new Map<string, { totalViews: number, postCount: number, forkCount: number, requestCount: number }>();
+
+  // Fetch all open requests for mapping
+  const { data: requests } = await supabase.from('post_requests').select('tags').eq('status', 'open');
+
+  posts.forEach(post => {
+    (post.tags || []).forEach((tag: string) => {
+      const current = nicheMap.get(tag) || { totalViews: 0, postCount: 0, forkCount: 0, requestCount: 0 };
+      nicheMap.set(tag, {
+        totalViews: current.totalViews + (post.views || 0),
+        postCount: current.postCount + 1,
+        forkCount: current.forkCount + (post.is_fork ? 1 : 0),
+        requestCount: current.requestCount
+      });
+    });
+  });
+
+  // Add request counts to the map
+  requests?.forEach(req => {
+     (req.tags || []).forEach((tag: string) => {
+        const current = nicheMap.get(tag) || { totalViews: 0, postCount: 0, forkCount: 0, requestCount: 0 };
+        current.requestCount += 1;
+        nicheMap.set(tag, current);
+     });
+  });
+
+  // 3. Calculate Intensity Score
+  const results = Array.from(nicheMap.entries()).map(([tag, stats]) => {
+    // Intensity = (Average Views * 0.4) + (Expansion Frequency * 0.6)
+    // Scale it to 0-100
+    const postCount = Math.max(1, stats.postCount);
+    const avgViews = stats.totalViews / postCount;
+    const expansionRatio = (stats.forkCount / postCount) * 100;
+    
+    // Simple normalization for a 0-100 intensity score
+    const intensity = Math.min(100, Math.round((avgViews / 10) + (expansionRatio * 0.6) + (stats.requestCount * 2)));
+
+    return {
+      tag,
+      totalViews: stats.totalViews,
+      postCount: stats.postCount,
+      requestCount: stats.requestCount,
+      intensity
+    };
+  });
+
+  return results.sort((a, b) => b.intensity - a.intensity).slice(0, 12);
+}
+
+export async function reportAsset(postId: string, reason: string, details?: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  console.log('[SIGNAL_DIAGNOSTIC] Attempting Transmission:', { postId, reason, reporter: user?.id || 'anonymous' });
+
+  const { error } = await supabase
+    .from('reports')
+    .insert([{
+      post_id: postId,
+      reporter_id: user?.id || null, // Allow anonymous signal transmission
+      reason,
+      details,
+      status: 'pending'
+    }]);
+
+  if (error) {
+    console.error('[SIGNAL_DIAGNOSTIC] Transmission Failed:', error);
+    return { error: 'Failed to transmit report signal.' };
+  }
+
+  console.log('[SIGNAL_DIAGNOSTIC] Signal Received by Archive.');
+  return { success: true };
+}
+
+export async function resolveReport(reportId: string, status: 'reviewed' | 'actioned') {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Authorization Denied.' };
+
+  // 1. Architect Verification
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, username')
+    .eq('id', user.id)
+    .single();
+  
+  const isAuthorized = profile?.role === 'admin' || profile?.username === 'lumen';
+  if (!isAuthorized) return { error: 'Insufficient Network Permissions.' };
+
+  // 2. Resolve Signal
+  const { error } = await supabase
+    .from('reports')
+    .update({ status })
+    .eq('id', reportId);
+
+  if (error) return { error: 'Failed to update signal status.' };
+
+  revalidatePath('/admin');
+  return { success: true };
 }
