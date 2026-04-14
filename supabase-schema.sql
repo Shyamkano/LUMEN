@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS posts (
   cover_image TEXT,
   tags TEXT[] DEFAULT '{}',
   read_time INTEGER,
+  views INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
@@ -127,6 +128,30 @@ CREATE TABLE IF NOT EXISTS followers (
   UNIQUE(follower_id, following_id)
 );
 
+-- 12. Notifications
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  actor_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  type TEXT NOT NULL, -- 'like', 'comment', 'follow', 'post', 'mention', 'reply'
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 13. Post Analytics (Daily Snapshots)
+CREATE TABLE IF NOT EXISTS post_analytics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  date DATE DEFAULT CURRENT_DATE,
+  views INTEGER DEFAULT 0,
+  likes INTEGER DEFAULT 0,
+  comments INTEGER DEFAULT 0,
+  time_spent_seconds INTEGER DEFAULT 0,
+  UNIQUE(post_id, date)
+);
+
 -- ============= INDEXES =============
 CREATE INDEX IF NOT EXISTS idx_posts_author ON posts(author_id);
 CREATE INDEX IF NOT EXISTS idx_posts_type ON posts(type);
@@ -140,6 +165,9 @@ CREATE INDEX IF NOT EXISTS idx_code_snippets_post ON code_snippets(post_id);
 CREATE INDEX IF NOT EXISTS idx_audio_metadata_post ON audio_metadata(post_id);
 CREATE INDEX IF NOT EXISTS idx_followers_follower ON followers(follower_id);
 CREATE INDEX IF NOT EXISTS idx_followers_following ON followers(following_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_post_analytics_post ON post_analytics(post_id);
+CREATE INDEX IF NOT EXISTS idx_post_analytics_date ON post_analytics(date);
 
 -- ============= RLS POLICIES =============
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -153,6 +181,8 @@ ALTER TABLE bookmarks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE drafts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE post_versions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE followers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE post_analytics ENABLE ROW LEVEL SECURITY;
 
 -- Profiles
 CREATE POLICY "Public profiles are viewable by everyone" ON profiles FOR SELECT USING (true);
@@ -213,6 +243,16 @@ CREATE POLICY "Post versions viewable by post author" ON post_versions FOR SELEC
 );
 CREATE POLICY "Post versions creatable by post author" ON post_versions FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM posts WHERE posts.id = post_versions.post_id AND posts.author_id = auth.uid())
+);
+
+-- Notifications
+CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE USING (auth.uid() = user_id);
+-- (Insertion is usually handled by server actions with service role or internal logic)
+
+-- Analytics
+CREATE POLICY "Authors can view own post analytics" ON post_analytics FOR SELECT USING (
+  EXISTS (SELECT 1 FROM posts WHERE posts.id = post_analytics.post_id AND posts.author_id = auth.uid())
 );
 
 -- ============= TRIGGER: Auto-create profile on signup =============

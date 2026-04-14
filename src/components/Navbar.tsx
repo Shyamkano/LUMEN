@@ -8,6 +8,8 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { getSearchSuggestions } from '@/app/actions/profiles';
+import { getUnreadCount } from '@/app/actions/notifications';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Navbar({ user }: { user: SupabaseUser | null }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -19,6 +21,13 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  
+  const { data: unreadCount } = useQuery({
+    queryKey: ['notifications', 'unread-count'],
+    queryFn: () => getUnreadCount(),
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -151,7 +160,13 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
               <>
                 <Link href="/notifications" className="relative p-2 rounded-xl hover:bg-muted/50 transition-all text-black">
                   <Bell size={18} strokeWidth={2.5} />
-                  <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-black rounded-full border border-white" />
+                  {unreadCount && unreadCount > 0 ? (
+                    <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full border border-white flex items-center justify-center animate-reveal">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  ) : (
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-black/10 rounded-full border border-white" />
+                  )}
                 </Link>
 
                 <Link href="/new">

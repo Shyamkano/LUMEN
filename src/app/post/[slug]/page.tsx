@@ -9,12 +9,15 @@ import { PostActions as AuthorActions } from '@/components/dashboard/PostActions
 import { PostAdminActions } from '@/components/admin/PostAdminActions';
 import { CommentSection } from '@/components/comments/CommentSection';
 import Link from 'next/link';
-
+import { Button } from '@/components/ui';
 import { FollowButton } from '@/components/social/FollowButton';
+import { TrendingUp, BarChart } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { AudioPlayer } from '@/components/audio/AudioPlayer';
 import type { Metadata } from 'next';
 import { ReadingProgressBar } from '@/components/post/ReadingProgressBar';
+import { ViewTracker } from '@/components/post/ViewTracker';
+import { Eye } from 'lucide-react';
 
 // Archival Rendering moved to ArchivalReader client component
 
@@ -115,6 +118,7 @@ export default async function PostPage({ params }: PostPageProps) {
   return (
     <main className="min-h-screen bg-white text-black overflow-x-hidden">
       <ReadingProgressBar />
+      <ViewTracker postId={post.id} />
 
       {/* Sidebar-like layout for large screens */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 md:gap-16 px-4 md:px-6 py-12 md:py-20">
@@ -146,6 +150,11 @@ export default async function PostPage({ params }: PostPageProps) {
               {isOwnPost && (
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mr-2">Management</span>
+                  <Link href={`/post/${post.slug}/analytics`}>
+                    <Button variant="outline" className="h-10 w-10 p-0 rounded-full border-border hover:border-foreground">
+                      <TrendingUp size={16} />
+                    </Button>
+                  </Link>
                   <AuthorActions id={post.id} type="post" slug={post.slug} />
                 </div>
               )}
@@ -207,6 +216,11 @@ export default async function PostPage({ params }: PostPageProps) {
                 <span>{post.read_time || 5} min read</span>
                 <span className="text-border">·</span>
                 <span>{format(new Date(post.created_at), 'MMMM d, yyyy')}</span>
+                <span className="text-border">·</span>
+                <span className="flex items-center gap-1.5">
+                  <Eye size={12} className="text-muted-foreground" />
+                  {post.views || 0} views
+                </span>
               </div>
             </div>
           </div>

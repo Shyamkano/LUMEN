@@ -96,6 +96,22 @@ export async function addComment(postId: string, content: string, parentId?: str
   }
 
   revalidatePath('/', 'layout');
+
+  // Increment daily comments in analytics
+  const today = new Date().toISOString().split('T')[0];
+  const { data: existing } = await (await createClient())
+    .from('post_analytics')
+    .select('id, comments')
+    .eq('post_id', postId)
+    .eq('date', today)
+    .maybeSingle();
+    
+  if (existing) {
+    await (await createClient()).from('post_analytics').update({ comments: (existing.comments || 0) + 1 }).eq('id', existing.id);
+  } else {
+    await (await createClient()).from('post_analytics').insert([{ post_id: postId, date: today, comments: 1 }]);
+  }
+
   return { success: true };
 }
 

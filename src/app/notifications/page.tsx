@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Button } from '@/components/ui';
 import { Bell, Heart, MessageSquare, UserPlus, Zap, ArrowLeft, Loader2, CheckCheck } from 'lucide-react';
@@ -10,23 +10,23 @@ import { formatDistanceToNow } from 'date-fns';
 
 export default function NotificationsPage() {
   const { user, loading } = useAuth();
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [fetching, setFetching] = useState(true);
+  const { data: notifications = [], isLoading: fetching } = useQuery({
+    queryKey: ['notifications', 'list'],
+    queryFn: () => getNotifications(),
+    enabled: !!user,
+    refetchInterval: 30000,
+  });
 
-  useEffect(() => {
-    async function loadNotifications() {
-      if (user) {
-        const data = await getNotifications();
-        setNotifications(data || []);
-        setFetching(false);
-      }
-    }
-    loadNotifications();
-  }, [user]);
+  const queryClient = useQueryClient();
 
   const handleMarkAll = async () => {
     await markAllAsRead();
-    setNotifications(notifications.map(n => ({ ...n, is_read: true })));
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
+  };
+
+  const handleMarkItem = async (id: string) => {
+    await markAsRead(id);
+    queryClient.invalidateQueries({ queryKey: ['notifications'] });
   };
 
   const getNotificationConfig = (type: string) => {
@@ -95,7 +95,7 @@ export default function NotificationsPage() {
             return (
               <div 
                 key={n.id} 
-                onClick={() => !n.is_read && markAsRead(n.id)}
+                onClick={() => !n.is_read && handleMarkItem(n.id)}
                 className={`group p-6 rounded-[2rem] bg-white border border-border hover:border-foreground transition-all flex items-center gap-6 cursor-pointer hover:shadow-xl hover:shadow-foreground/5 ${!n.is_read ? 'border-l-4 border-l-black' : ''}`}
               >
                 <div className={`w-12 h-12 rounded-2xl bg-muted/5 flex items-center justify-center shrink-0 border border-border group-hover:bg-foreground transition-all duration-300`}>

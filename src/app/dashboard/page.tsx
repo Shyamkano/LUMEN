@@ -11,10 +11,13 @@ import {
   Ghost,
   FileEdit, // Added
   Send,     // Added
-  Bookmark  // Added
+  Bookmark,
+  ChevronRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui';
+import { AnalyticsDashboard } from '@/components/dashboard/AnalyticsDashboard';
+import { Activity } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -69,6 +72,22 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-20">
         <div className="space-y-24">
+
+          {/* Analytics Section */}
+          <section className="space-y-10">
+            <div className="flex items-center justify-between border-b border-border pb-6">
+              <div className="flex items-center gap-4">
+                <Activity size={24} strokeWidth={2.5} />
+                <h2 className="text-2xl font-bold tracking-tighter uppercase">Intelligence & Reach</h2>
+              </div>
+              <Link href="/analytics">
+                <Button variant="outline" className="rounded-full px-6 h-10 text-[9px] font-black uppercase tracking-widest gap-2 hover:bg-black hover:text-white transition-all">
+                   Full Growth Protocol <ChevronRight size={14} />
+                </Button>
+              </Link>
+            </div>
+            <AnalyticsDashboard />
+          </section>
 
           {/* Drafts Section */}
           <section className="space-y-10">

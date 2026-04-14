@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { Heart, MessageCircle, Code, Mic, FileText, Zap, User } from 'lucide-react';
+import { Heart, MessageCircle, Code, Mic, FileText, Zap, User, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createExcerpt } from '@/lib/utils';
 import type { Post } from '@/types';
@@ -135,10 +135,10 @@ export function PostCard({ post }: { post: Post }) {
               {config.label}
             </span>
           </div>
-
-          <div className="flex items-center gap-6 text-muted-foreground">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] hidden sm:block opacity-40">
-              REF // #{post.id.substring(0, 8).toUpperCase()}
+          <div className="flex items-center gap-3 sm:gap-6 text-muted-foreground whitespace-nowrap">
+            <span className="flex items-center gap-1 text-[10px] font-black">
+              <Eye size={14} className="group-hover:text-black transition-colors" />
+              {post.views || 0}
             </span>
             <span className="flex items-center gap-1 text-[10px] font-black">
               <Heart size={14} className="group-hover:text-red-500 transition-colors" />

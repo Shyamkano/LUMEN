@@ -38,6 +38,22 @@ export async function toggleLike(postId: string) {
     }
 
     revalidatePath('/');
+    
+    // Increment daily likes in analytics
+    const today = new Date().toISOString().split('T')[0];
+    const { data: existing } = await supabase
+      .from('post_analytics')
+      .select('id, likes')
+      .eq('post_id', postId)
+      .eq('date', today)
+      .maybeSingle();
+      
+    if (existing) {
+      await supabase.from('post_analytics').update({ likes: (existing.likes || 0) + 1 }).eq('id', existing.id);
+    } else {
+      await supabase.from('post_analytics').insert([{ post_id: postId, date: today, likes: 1 }]);
+    }
+
     return { liked: true };
   }
 }
@@ -151,4 +167,190 @@ export async function getUserBookmarks() {
     comments_count: commentsCount[post.id] || 0,
     isFollowing: followingSet.has(post.author_id),
   }));
+}
+
+/**
+ * Increments the view count for a post and updates daily analytics.
+ */
+export async function trackView(postId: string) {
+  const supabase = await createClient();
+  
+  // 1. Increment total views on the post
+  // We use RPC for atomic increment if available, but falling back to manual for now
+  // Since we don't have the RPC defined in the DB yet, we'll try a simple update
+  // Ideal: supabase.rpc('increment_views', { post_id: postId })
+  
+  const { data: post, error: fetchError } = await supabase
+    .from('posts')
+    .select('views')
+    .eq('id', postId)
+    .single();
+
+  if (fetchError) return;
+
+  await supabase
+    .from('posts')
+    .update({ views: (post.views || 0) + 1 })
+    .eq('id', postId);
+
+  // 2. Update daily analytics
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Try to upsert daily analytics
+  // First check if exists
+  const { data: existingAnalytics } = await supabase
+    .from('post_analytics')
+    .select('id, views')
+    .eq('post_id', postId)
+    .eq('date', today)
+    .maybeSingle();
+
+  if (existingAnalytics) {
+    await supabase
+      .from('post_analytics')
+      .update({ views: (existingAnalytics.views || 0) + 1 })
+      .eq('id', existingAnalytics.id);
+  } else {
+    await supabase
+      .from('post_analytics')
+      .insert([{
+        post_id: postId,
+        date: today,
+        views: 1
+      }]);
+  }
+}
+
+export async function getUserAnalytics() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // 1. Get all user posts
+  const { data: posts } = await supabase
+    .from('posts')
+    .select('id, title, views, created_at')
+    .eq('author_id', user.id);
+
+  if (!posts) return null;
+
+  const postIds = posts.map(p => p.id);
+  
+  // 2. Get total likes and comments
+  const [
+    { count: totalLikes },
+    { count: totalComments },
+    { count: totalFollowers }
+  ] = await Promise.all([
+    supabase.from('likes').select('*', { count: 'exact', head: true }).in('post_id', postIds),
+    supabase.from('comments').select('*', { count: 'exact', head: true }).in('post_id', postIds),
+    supabase.from('followers').select('*', { count: 'exact', head: true }).eq('following_id', user.id)
+  ]);
+
+  // 3. Get daily analytics for the last 30 days
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  
+  const { data: dailyAnalytics } = await supabase
+    .from('post_analytics')
+    .select('*')
+    .in('post_id', postIds)
+    .gte('date', thirtyDaysAgo.toISOString().split('T')[0])
+    .order('date', { ascending: true });
+
+  // Aggregate daily stats
+  const aggregateDaily: Record<string, { views: number, date: string }> = {};
+  dailyAnalytics?.forEach(rec => {
+    if (!aggregateDaily[rec.date]) {
+      aggregateDaily[rec.date] = { views: 0, date: rec.date };
+    }
+    aggregateDaily[rec.date].views += rec.views || 0;
+  });
+
+  const totalViews = posts.reduce((acc, p) => acc + (p.views || 0), 0);
+  const totalTimeSpent = dailyAnalytics?.reduce((acc, rec) => acc + (rec.time_spent_seconds || 0), 0) || 0;
+
+  return {
+    totalViews,
+    totalLikes: totalLikes || 0,
+    totalComments: totalComments || 0,
+    totalFollowers: totalFollowers || 0,
+    totalTimeSpent,
+    averageTimeSpent: totalViews > 0 ? Math.round(totalTimeSpent / totalViews) : 0,
+    postsCount: posts.length,
+    dailyReach: Object.values(aggregateDaily),
+    topPosts: posts.sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5)
+  };
+}
+
+export async function recordTimeSpent(postId: string, seconds: number) {
+  const supabase = await createClient();
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data: existing } = await supabase
+    .from('post_analytics')
+    .select('id, time_spent_seconds')
+    .eq('post_id', postId)
+    .eq('date', today)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase
+      .from('post_analytics')
+      .update({ time_spent_seconds: (existing.time_spent_seconds || 0) + seconds })
+      .eq('id', existing.id);
+  } else {
+    // This shouldn't usually happen because view tracking creates the record, 
+    // but we'll handle it for robustness
+    await supabase
+      .from('post_analytics')
+      .insert([{
+        post_id: postId,
+        date: today,
+        time_spent_seconds: seconds
+      }]);
+  }
+}
+
+export async function getIndividualPostAnalytics(postId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  // 1. Verify ownership
+  const { data: post } = await supabase
+    .from('posts')
+    .select('id, title, author_id, views, created_at, slug')
+    .eq('id', postId)
+    .single();
+
+  if (!post || (post.author_id !== user.id)) return null;
+
+  // 2. Fetch daily stats (last 60 days)
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+  const { data: daily } = await supabase
+    .from('post_analytics')
+    .select('*')
+    .eq('post_id', postId)
+    .gte('date', sixtyDaysAgo.toISOString().split('T')[0])
+    .order('date', { ascending: true });
+
+  // 3. Aggregate totals
+  const totalLikes = daily?.reduce((acc, d) => acc + (d.likes || 0), 0) || 0;
+  const totalComments = daily?.reduce((acc, d) => acc + (d.comments || 0), 0) || 0;
+  const totalTime = daily?.reduce((acc, d) => acc + (d.time_spent_seconds || 0), 0) || 0;
+
+  return {
+    post,
+    daily: daily || [],
+    totals: {
+      views: post.views || 0,
+      likes: totalLikes,
+      comments: totalComments,
+      timeSpent: totalTime,
+      avgTime: (post.views || 0) > 0 ? Math.round(totalTime / post.views) : 0
+    }
+  };
 }

@@ -30,6 +30,7 @@ export interface Post {
   cover_image: string | null;
   tags: string[] | null;
   read_time: number | null;
+  views: number;
   created_at: string;
   updated_at: string;
   // Joined
