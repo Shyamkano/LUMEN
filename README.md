@@ -5,18 +5,18 @@
 </a>
 <h1 align="center">LUMEN</h1>
 <p align="center">
-<b>A Collective Asset Infrastructure for High-Fidelity Information.</b> <br/> 
-Synchronize stories, code, and digital narratives across a lineage of network intelligence.
+<b>The Collective Intelligence Registry & High-Fidelity Narrative Engine.</b> <br/> 
+Synchronize stories, code, and digital narratives across a lineage of network resonance.
 <br/>
 Live at <a href="https://lumen-archive.vercel.app/">lumen-archive.vercel.app</a>
 </p>
 
 <p align="center">
-  <a href="#the-pillars">The Pillars</a> •
-  <a href="#narrative-genealogy">Genealogy</a> •
-  <a href="#the-pull-economy">Pull Economy</a> •
-  <a href="#intelligence-map">Intelligence Map</a> •
-  <a href="#tech-stack">Stack</a>
+  <a href="#-the-vision">The Vision</a> •
+  <a href="#-core-architecture">Basics</a> •
+  <a href="#-feature-hierarchy">Features</a> •
+  <a href="#-what-makes-lumen-different">Differentiation</a> •
+  <a href="#-tech-stack">Stack</a>
 </p>
 </div>
 
@@ -25,42 +25,66 @@ Live at <a href="https://lumen-archive.vercel.app/">lumen-archive.vercel.app</a>
 ## ⚡ The Vision
 LUMEN is not just a publishing platform; it is a **Collective Asset Infrastructure**. It shifts the focus from individual content ownership to **Network Resonance**. Built on a strict **"Archival Off-White"** design language, it provides an eye-safe, high-contrast environment for radical thinkers to build a perpetual library of human intelligence.
 
+In an era of fleeting social feeds, LUMEN prioritizes **durability, lineage, and depth**.
+
 ---
 
-## 🏛️ The Pillars of LUMEN
+## 🏛️ Core Architecture (The Basics)
+Before diving into the narrative protocols, LUMEN handles the foundational blogging experience with extreme polish:
+- **High-Fidelity Writing**: A customized TipTap/ProseMirror editor designed for a distraction-free experience.
+- **Multi-Format Support**: Dedicated workflows for **Long-form Blogs**, **Technical Code Entries**, and **Audio Narratives**.
+- **Performance First**: Built on Next.js 16 (Turbopack) and React 19 for instantaneous navigation and state-of-the-art server-side rendering.
+- **Identity Synthesis**: Robust authentication via Supabase (Social & Email) with integrated profile management.
+- **Adaptive Aesthetics**: System-wide Dark Mode that preserves contrast ratios for long-term reading comfort.
 
-### 1. Narrative Genealogy (Forking & Remixing)
-LUMEN treats ideas as evolving assets.
-- **Genealogy Tree**: Track the lineage of every post. See how a "Seed Post" blooms into community-driven "Remixes."
-- **Legacy Score**: Automatically calculate the contribution of original authors vs. remixers, ensuring perpetual credit for foundational ideas.
+---
 
-### 2. The Pull Economy (Signals & Gaps)
-Traditional platforms are "Push" based (post and hope). LUMEN implements a **Pull Economy**.
-- **Signal Gaps**: The community can signal "Requests" for knowledge missing in the network.
-- **Reward Protocol**: Stake points on gaps. Architects who "Construct Solutions" fulfill these requests and claim the collective bounty.
+## 🚀 Feature Hierarchy (Small to Big)
 
-### 3. Intelligence Map (Niche Heatmaps)
-A real-time visualization of the network's cognitive clusters.
-- **Resonance Intensity**: Browse the global map to see which topics are "Hot" vs. "Cold" based on real-time dwell stats.
-- **Opportunity Zones**: Identify niches with high requests but low post volume to find your next breakthrough.
+### 🔹 Layer 1: The Writing Suite
+*   **Persistent Images**: Custom logic to ensure image URLs are serialized and preserved across edits without breakage.
+*   **Media Multi-Upload**: Support for cover images, inline assets, and external audio URLs.
+*   **Metadata Engine**: Automatic read-time calculation, tag synchronization, and slug generation for SEO stability.
+*   **Draft Protocol**: Auto-saving drafts to prevent loss of intellectual assets during the creation process.
 
-### 4. Personal Growth Center (Privacy-First)
-- **Deep Analytics**: Authors get exclusive access to "Dwell Time," "Viral Velocity," and "Resonance Tiers."
-- **Author Identity Isolation**: Analytics are strictly private to the author, while the "Impact Scale" and "Genealogy" remain public for community transparency.
+### 🔹 Layer 2: Social Connectivity
+*   **Resident Mentions**: A precision @mention system allowing authors to reference other "Residents" in the network.
+*   **Signal Propagation**: Real-time notifications for likes, follows, and comments.
+*   **Legacy Comments**: Deeply nested discussion threads designed for high-resolution discourse rather than shallow engagement.
 
-### 5. Shadow Protocol (Anonymous Identities)
-- **District Aliases**: Post high-risk or raw thoughts via hardened anonymous identities. 
-- **Isolated Reputation**: Build a separate reputation for your shadow identity that is cryptographically isolated from your public profile.
+### 🔹 Layer 3: Advanced Intelligence
+*   **Shadow Identity Protocol**: Post raw or high-risk thoughts through **hardened anonymous aliases**. These identities (Residents) build their own reputation, cryptographically isolated from your public profile.
+*   **Narrative Genealogy**: LUMEN treats ideas as evolving assets. Every post can be **Forked** to create a "Remix," while automatically tracking the lineage back to the original "Seed Post."
+*   **Editorial Co-Pilot**: Integrated **Mistral AI** assistant to aid in brainstorming, refining prose, and suggesting structural improvements.
+
+### 🔹 Layer 4: Network Mechanics (Big Features)
+*   **The Pull Economy (Signal Gaps)**: Traditional platforms are "Push" based. LUMEN implements a **Pull Economy** where the community can signal "Requests" for missing knowledge. Architects who "Resolve Gaps" claim collective credit.
+*   **Cognitive Cartography**: A real-time **Intelligence Map** visualizing topic heatmaps across the network. Identify "Hot" zones of resonance and "Cold" zones of opportunity.
+*   **Immutable Versioning**: Every post maintains an archive of versions, allowing readers to track how an idea has evolved from its inception to the current state.
+
+---
+
+## 🧪 What Makes LUMEN Different?
+
+| Feature | Traditional Blogs | LUMEN |
+| :--- | :--- | :--- |
+| **Philosophy** | Content Consumption | Knowledge Archival |
+| **Ownership** | Isolated Posts | Narrative Lineage (Forks) |
+| **Discovery** | Algorithmic Feed | Cognitive Cartography (Heatmaps) |
+| **Anonymity** | Hidden Profiles | Persistent Shadow Identities (Aliases) |
+| **Input** | Write & Hope (Push) | Signal Gaps & Resolutions (Pull) |
+| **Design** | Eye-Strain UI | Archival Off-White System (Low Stress) |
 
 ---
 
 ## 🛠 Tech Stack
 
-*   **Framework**: Next.js 16 (Turbopack) & React 19
-*   **Database**: Supabase (Hardened SQL with CHECK constraints & Secure RPCs)
-*   **Editor**: TipTap (Custom Persistent Image & Mention Engine)
-*   **Styling**: Tailwind CSS v4 + Archival Off-White System Variables
-*   **Intelligence**: Mistral AI Editorial Co-Pilot
+*   **Logic**: Next.js 16 (App Router) & React 19
+*   **State**: TanStack Query (React Query) v5 for optimistic updates.
+*   **Database**: Supabase (PostgreSQL) with hardened JSONB storage for narratives.
+*   **Editor**: custom TipTap Engine with Mention, Image, and Code-Snippet extensions.
+*   **Styling**: Tailwind CSS v4 + custom high-contrast fluid typography.
+*   **AI**: Mistral AI Editorial Co-Pilot.
 
 ---
 
@@ -69,16 +93,13 @@ A real-time visualization of the network's cognitive clusters.
 ### 1. Environment Synchronization
 Configure your `.env.local` with the following variables:
 ```env
-NEXT_PUBLIC_SITE_URL=https://lumen-archive.vercel.app
+NEXT_PUBLIC_SITE_URL=your_deployment_url
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 MISTRAL_API_KEY=your_mistral_api_key
 ```
 
-### 2. Database Hardening
-Run the provided `supabase-schema.sql` to initialize the collective asset pillars, including the `increment_post_views` and `track_daily_reach` security functions.
-
-### 3. Start Local Sync
+### 2. Start Local Sync
 ```bash
 npm install
 npm run dev
