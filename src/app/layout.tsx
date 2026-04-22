@@ -10,12 +10,17 @@ import { ThemeProvider } from "@/providers/ThemeProvider";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | LUMEN Archive",
+    template: "%s | LUMEN",
     default: "LUMEN | Collective Asset Infrastructure",
   },
-  description: "Synchronize your intelligence. LUMEN is an archival digital publishing network for narrative genealogy, network resonance, and the pull economy.",
-  keywords: ["archival publishing", "collective assets", "narrative genealogy", "network intelligence", "pull economy", "lumen archive"],
-  authors: [{ name: "LUMEN Research" }],
+  description: "Synchronize your intelligence. LUMEN is an archival digital publishing network for stories, posts, and community growth.",
+  applicationName: 'LUMEN',
+  appleWebApp: {
+    title: 'LUMEN',
+    statusBarStyle: 'default',
+  },
+  keywords: ["LUMEN", "lumen stories", "collective assets", "narrative genealogy", "network intelligence", "lumen archive"],
+  authors: [{ name: "LUMEN" }],
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -26,8 +31,12 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LUMEN Archive",
-    description: "The archive for network intelligence and narrative resonance.",
+    title: "LUMEN",
+    description: "The community network for intelligence and stories.",
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
   }
 };
 
@@ -46,6 +55,19 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              "name": "LUMEN",
+              "url": "https://lumen-archive.vercel.app/",
+            }),
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-background text-foreground selection:bg-black selection:text-white antialiased overflow-x-hidden" suppressHydrationWarning>
         <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false} enableColorScheme={false} storageKey="lumen-theme-v2">
           <QueryProvider>
