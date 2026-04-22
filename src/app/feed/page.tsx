@@ -11,6 +11,16 @@ import { Loader2, PenTool, Zap, Code, Mic, TrendingUp, ChevronRight } from 'luci
 import { UserSearchWidget } from '@/components/social/UserSearchWidget';
 import { FeatureAlerter } from '@/components/feed/FeatureAlerter';
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Home | LUMEN',
+  description: 'The latest stories and posts from the community.',
+  alternates: {
+    canonical: 'https://lumen-archive.vercel.app/feed',
+  },
+};
+
 export const dynamic = 'force-dynamic';
 
 export default async function FeedPage() {
@@ -96,11 +106,11 @@ export default async function FeedPage() {
               <div className="relative z-10 space-y-4">
                 <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/10 w-fit backdrop-blur-md">
                   <TrendingUp size={10} className="text-emerald-400" />
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white">Live Intelligence</span>
+                  <span className="text-[8px] font-black uppercase tracking-[0.2em] text-white">Live Data</span>
                 </div>
 
                 <h3 className="text-2xl font-black text-white tracking-tighter uppercase leading-tight">
-                  Intelligence <br /> Map
+                  Global <br /> Trends
                 </h3>
 
                 <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest flex items-center gap-2">
@@ -145,7 +155,7 @@ export default async function FeedPage() {
           </div>
 
           <div className="pt-8 border-t border-border">
-            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6">Archive Topics</h3>
+            <h3 className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em] mb-6">Popular Topics</h3>
             <div className="flex flex-wrap gap-2">
               {trendingTags.map(tag => (
                 <Link key={tag} href={`/feed?tag=${encodeURIComponent(tag)}`} className="px-3 py-1.5 rounded-full bg-muted/20 hover:bg-foreground hover:text-background text-foreground text-[10px] font-black uppercase tracking-wider transition-all border border-border">

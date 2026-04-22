@@ -4,6 +4,13 @@ import { PenTool, Zap, Code, Ghost, Sparkles, Mic } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: 'https://lumen-archive.vercel.app/',
+  },
+};
 
 export default async function LandingPage() {
   const supabase = await createClient();
