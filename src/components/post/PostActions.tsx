@@ -71,33 +71,33 @@ export function PostActions({
   };
 
   return (
-    <div className="flex items-center gap-1 bg-white border border-zinc-100 shadow-md rounded-full px-4 py-2 hover:shadow-lg transition-shadow duration-300">
+    <div className="flex items-center gap-1 bg-card border border-border shadow-md rounded-full px-4 py-2 hover:shadow-lg transition-shadow duration-300">
         {/* Like */}
         <button
           onClick={handleLike}
           className={`flex items-center gap-1.5 px-3 py-2 rounded-full transition-all ${
-            liked ? 'text-red-500' : 'text-zinc-500 hover:text-red-500 hover:bg-red-50'
+            liked ? 'text-red-500' : 'text-muted-foreground hover:text-red-500 hover:bg-red-500/10'
           } ${animating ? 'scale-110' : 'scale-100'}`}
         >
           <Heart size={18} className={liked ? 'fill-red-500' : ''} />
           <span className="text-sm font-medium">{likes > 0 ? likes : ''}</span>
         </button>
 
-        <div className="w-px h-5 bg-zinc-200" />
+        <div className="w-px h-5 bg-border" />
 
         {/* Comments */}
         <button 
           onClick={scrollToComments}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-full text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50 transition-all"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
         >
           <MessageCircle size={18} />
           <span className="text-sm font-medium">{initialComments > 0 ? initialComments : ''}</span>
         </button>
 
-        <div className="w-px h-5 bg-zinc-200" />
+        <div className="w-px h-5 bg-border" />
 
         {/* Share */}
-        <Button size="icon" variant="ghost" onClick={handleShare} className={`rounded-full h-9 w-9 transition-colors ${shared ? 'text-green-600' : 'text-zinc-500 hover:text-zinc-900'}`}>
+        <Button size="icon" variant="ghost" onClick={handleShare} className={`rounded-full h-9 w-9 transition-colors ${shared ? 'text-green-600' : 'text-muted-foreground hover:text-foreground'}`}>
           {shared ? <Zap size={18} className="fill-green-600" /> : <Share2 size={18} />}
         </Button>
 
@@ -106,17 +106,17 @@ export function PostActions({
           size="icon"
           variant="ghost"
           onClick={handleBookmark}
-          className={`rounded-full h-9 w-9 ${bookmarked ? 'text-zinc-900' : 'text-zinc-500 hover:text-zinc-900'}`}
+          className={`rounded-full h-9 w-9 ${bookmarked ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
         >
-          <Bookmark size={18} className={bookmarked ? 'fill-zinc-900' : ''} />
+          <Bookmark size={18} className={bookmarked ? 'fill-foreground' : ''} />
         </Button>
 
-        <div className="w-px h-5 bg-zinc-200" />
+        <div className="w-px h-5 bg-border" />
 
         {/* Report */}
         <button 
           onClick={() => setShowReport(true)}
-          className="flex items-center justify-center h-9 w-9 rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 transition-all"
+          className="flex items-center justify-center h-9 w-9 rounded-full text-muted-foreground/60 hover:text-red-500 hover:bg-red-500/10 transition-all"
           title="Report Signal"
         >
           <Flag size={16} />

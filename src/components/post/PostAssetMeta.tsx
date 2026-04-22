@@ -155,7 +155,7 @@ export function PostAssetMeta({ postId, slug, healthStatus, validationScore, isA
       </div>
 
       <div className="flex gap-4 pt-2">
-        <Link href={`/post/${slug}/lineage`} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-colors cursor-pointer">
+        <Link href={`/post/${slug}/lineage`} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
           <History size={12} /> Narrative History
         </Link>
       </div>

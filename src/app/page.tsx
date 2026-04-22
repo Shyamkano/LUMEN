@@ -20,41 +20,42 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="h-[calc(100vh-80px)] max-w-7xl mx-auto px-6 relative flex flex-col justify-center overflow-hidden">
+    <div className="h-[100%] max-w-7xl mx-auto px-6 relative flex flex-col justify-center overflow-hidden">
       {/* Background Glows */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[40vh] bg-foreground/[0.02] blur-[100px] rounded-full pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none opacity-50" style={{ background: 'var(--luminous-glow)' }} />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[40vh] bg-foreground/[0.03] blur-[120px] rounded-full pointer-events-none" />
 
-      <main className="relative z-10 animate-reveal flex flex-col items-start gap-4 py-4">
-        <span className="text-[9px] font-black uppercase tracking-[0.5em] text-muted-foreground border border-border px-3 py-1 rounded-full shadow-sm">
+      <main className="relative z-10 animate-reveal flex flex-col items-start gap-4 py-8">
+        <span className="text-[9px] font-black uppercase tracking-[0.5em] text-muted-foreground border border-border/50 px-3 py-1 rounded-full shadow-sm bg-background/50 backdrop-blur-sm">
           Luminous Network
         </span>
 
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black leading-[0.8] text-foreground tracking-tighter">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black leading-[0.8] text-foreground tracking-tighter pt-2">
           CREATE.
           <br />
           <span className="italic font-light opacity-80">without limits.</span>
         </h1>
 
         <p className="text-base md:text-xl text-muted-foreground max-w-xl leading-tight font-medium tracking-tight mt-2">
-          The premier monochrome space for radical thinkers to share their most luminous archive and logs.
+          The premier monochrome space for radical thinkers to share their most luminous stories and posts.
         </p>
 
         <div className="flex flex-wrap gap-4 mt-6">
           {user ? (
             <Link href="/dashboard">
-              <Button className="rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-foreground/5 transition-all hover:scale-105 active:scale-95">
+              <Button className="rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-foreground/5 transition-all hover:scale-105 active:scale-95 bg-foreground text-background">
                 Go to Dashboard
               </Button>
             </Link>
           ) : (
             <Link href="/auth/signup">
-              <Button className="rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-foreground/5 transition-all hover:scale-105 active:scale-95">
+              <Button className="rounded-full px-8 h-12 text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-foreground/5 transition-all hover:scale-105 active:scale-95 bg-foreground text-background">
                 Join Lumen
               </Button>
             </Link>
           )}
           <Link href="/feed">
-            <Button variant="outline" className="rounded-full px-6 h-10 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-all">
+            <Button variant="outline" className="rounded-full px-6 h-10 text-[9px] font-black uppercase tracking-[0.2em] hover:bg-foreground hover:text-background transition-all border-border shadow-sm">
               Enter Feed
             </Button>
           </Link>
@@ -68,7 +69,7 @@ export default async function LandingPage() {
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Curation</h3>
-              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Deep writing and meticulous archive logs.</p>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Deep writing and meticulous story posts.</p>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -77,7 +78,7 @@ export default async function LandingPage() {
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Velocity</h3>
-              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Rapid insights and micro-logs with zero friction.</p>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Rapid insights and micro-posts with zero friction.</p>
             </div>
           </div>
           <div className="flex flex-col gap-2">
@@ -86,7 +87,7 @@ export default async function LandingPage() {
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Structure</h3>
-              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Technical documentation and project logs.</p>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Technical documentation and project posts.</p>
             </div>
           </div>
 
@@ -114,7 +115,7 @@ export default async function LandingPage() {
             </div>
             <div>
               <h3 className="text-[10px] font-black uppercase tracking-widest mb-0.5">Multi-Sync</h3>
-              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Monochromatic voice logs and audio archives.</p>
+              <p className="text-[10px] text-muted-foreground leading-tight max-w-[180px]">Monochromatic voice posts and audio stories.</p>
             </div>
           </div>
         </div>

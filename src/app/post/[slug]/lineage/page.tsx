@@ -12,7 +12,7 @@ export default async function LineagePage(props: { params: Promise<{ slug: strin
   if (!lineage) notFound();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <LineageTree 
         parent={lineage.parent as any}
         current={lineage.current as any}

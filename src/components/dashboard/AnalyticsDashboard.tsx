@@ -35,21 +35,21 @@ export function AnalyticsDashboard() {
     <div className="space-y-12 animate-reveal">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Reach */}
-        <div className="p-8 rounded-[2rem] bg-black text-white space-y-4 shadow-xl shadow-black/10">
+        <div className="p-8 rounded-[2rem] bg-foreground text-background space-y-4 shadow-xl shadow-foreground/10">
           <div className="flex justify-between items-start">
-            <div className="p-2 bg-white/10 rounded-xl">
+            <div className="p-2 bg-background/10 rounded-xl">
               <Eye size={18} />
             </div>
-            <ArrowUpRight size={18} className="text-white/40" />
+            <ArrowUpRight size={18} className="text-background/40" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/50">Total Reach</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-background/50">Total Reach</p>
             <h3 className="text-4xl font-black tracking-tighter">{data.totalViews.toLocaleString()}</h3>
           </div>
         </div>
 
         {/* Engagement */}
-        <div className="p-8 rounded-[2rem] bg-white border border-border space-y-4">
+        <div className="p-8 rounded-[2rem] bg-card border border-border space-y-4">
           <div className="flex justify-between items-start">
             <div className="p-2 bg-muted/50 rounded-xl">
               <Heart size={18} />
@@ -63,7 +63,7 @@ export function AnalyticsDashboard() {
         </div>
 
         {/* Dialogue */}
-        <div className="p-8 rounded-[2rem] bg-white border border-border space-y-4">
+        <div className="p-8 rounded-[2rem] bg-card border border-border space-y-4">
           <div className="flex justify-between items-start">
             <div className="p-2 bg-muted/50 rounded-xl">
               <MessageSquare size={18} />
@@ -76,7 +76,7 @@ export function AnalyticsDashboard() {
         </div>
 
         {/* Attention */}
-        <div className="p-8 rounded-[2rem] bg-white border border-border space-y-4">
+        <div className="p-8 rounded-[2rem] bg-card border border-border space-y-4">
           <div className="flex justify-between items-start">
             <div className={`p-2 bg-muted/50 rounded-xl`}>
               <TrendingUp size={18} />
@@ -94,15 +94,15 @@ export function AnalyticsDashboard() {
       </div>
 
       {/* Daily Growth Chart (Simple CSS/SVG) */}
-      <div className="p-10 rounded-[3rem] border border-border bg-white space-y-10">
+      <div className="p-10 rounded-[3rem] border border-border bg-card space-y-10">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h4 className="text-xl font-black tracking-tight uppercase">Reach Growth</h4>
             <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">30-Day Synchronization Activity</p>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-black" />
-            <span className="text-[9px] font-black uppercase tracking-widest">Views</span>
+            <div className="w-3 h-3 rounded-full bg-foreground" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-foreground">Views</span>
           </div>
         </div>
 
@@ -114,10 +114,10 @@ export function AnalyticsDashboard() {
               return (
                 <div key={day.date} className="flex-1 group relative">
                   <div 
-                    className="w-full bg-muted/20 hover:bg-black transition-all rounded-t-sm" 
+                    className="w-full bg-muted/20 hover:bg-foreground transition-all rounded-t-sm" 
                     style={{ height: `${Math.max(height, 5)}%` }}
                   />
-                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block bg-black text-white text-[8px] font-black px-2 py-1 rounded-md whitespace-nowrap z-10 shadow-xl">
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 hidden group-hover:block bg-foreground text-background text-[8px] font-black px-2 py-1 rounded-md whitespace-nowrap z-10 shadow-xl">
                     {day.views} views ({format(new Date(day.date), 'MMM d')})
                   </div>
                 </div>
@@ -145,7 +145,7 @@ export function AnalyticsDashboard() {
           </h4>
           <div className="space-y-4">
             {data.topPosts.map((post: any, i: number) => (
-              <div key={post.id} className="flex justify-between items-center p-6 rounded-3xl border border-border bg-white hover:border-black transition-all group">
+              <div key={post.id} className="flex justify-between items-center p-6 rounded-3xl border border-border bg-card hover:border-foreground transition-all group">
                 <div className="flex items-center gap-6">
                   <span className="text-xl font-black text-muted-foreground/30 tabular-nums">0{i+1}</span>
                   <div>
@@ -173,7 +173,7 @@ export function AnalyticsDashboard() {
                   <span>{Math.round(data.totalViews / data.postsCount) || 0}</span>
                 </div>
                 <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
-                  <div className="h-full bg-black w-[65%]" />
+                  <div className="h-full bg-foreground w-[65%]" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -182,12 +182,12 @@ export function AnalyticsDashboard() {
                   <span>{(((data.totalLikes + data.totalComments) / (data.totalViews || 1)) * 100).toFixed(1)}%</span>
                 </div>
                 <div className="h-1 w-full bg-muted/30 rounded-full overflow-hidden">
-                  <div className="h-full bg-black w-[42%]" />
+                  <div className="h-full bg-foreground w-[42%]" />
                 </div>
               </div>
            </div>
            
-           <div className="p-6 rounded-2xl bg-white border border-border">
+           <div className="p-6 rounded-2xl bg-card border border-border">
               <p className="text-[10px] font-medium leading-relaxed italic text-muted-foreground">
                 "Reach is the volume of your signal; Engagement is the depth of its resonance."
               </p>

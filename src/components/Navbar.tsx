@@ -78,7 +78,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
             </button>
 
             <Link
-              href="/feed"
+              href={user ? "/feed" : "/"}
               className="text-lg md:text-2xl font-black tracking-tighter text-foreground hover:opacity-70 transition-all uppercase shrink-0"
             >
               LUMEN <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse ml-1 inline-block" />
@@ -86,8 +86,8 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
             <nav className="hidden lg:flex items-center gap-8">
               {/* Desktop menu items */}
-              <Link href="/" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">About</Link>
-              {user && <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-black transition-all">Dashboard</Link>}
+              <Link href="/feed" className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">Home</Link>
+              {user && <Link href="/dashboard" className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-all">Dashboard</Link>}
             </nav>
           </div>
 
@@ -102,7 +102,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                 onBlur={() => !searchQuery && setShowMobileSearch(false)}
                 onFocus={() => searchQuery.length > 1 && setSearchOpen(true)}
                 placeholder="Search..."
-                className="w-full bg-muted/30 border border-border rounded-xl h-9 md:h-10 pl-11 pr-4 text-xs font-medium focus:outline-none focus:border-black transition-all text-black placeholder:text-muted-foreground/60 shadow-sm"
+                className="w-full bg-muted/30 border border-border rounded-xl h-9 md:h-10 pl-11 pr-4 text-xs font-medium focus:outline-none focus:border-foreground transition-all text-foreground placeholder:text-muted-foreground/60 shadow-sm"
               />
               {showMobileSearch && (
                 <button type="button" onClick={() => setShowMobileSearch(false)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground">
@@ -125,7 +125,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                         <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Residents</p>
                         {suggestions.users.map(u => (
                           <Link key={u.id} href={`/profile/${u.username}`} onClick={() => { setSearchOpen(false); setShowMobileSearch(false); }} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
-                            <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black overflow-hidden">{u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : (u.username || 'A').charAt(0).toUpperCase()}</div>
+                            <div className="w-8 h-8 rounded-full bg-foreground text-background flex items-center justify-center text-[10px] font-black overflow-hidden">{u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" alt="" /> : (u.username || 'A').charAt(0).toUpperCase()}</div>
                             <span className="text-sm font-bold text-foreground group-hover:underline truncate">{u.full_name || u.username}</span>
                           </Link>
                         ))}
@@ -133,7 +133,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
                     )}
                     {suggestions.posts.length > 0 && (
                       <div>
-                        <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Narratives</p>
+                        <p className="px-6 text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-2">Posts</p>
                         {suggestions.posts.map(p => (
                           <Link key={p.id} href={`/post/${p.slug}`} onClick={() => { setSearchOpen(false); setShowMobileSearch(false); }} className="flex items-center gap-3 px-6 py-2 hover:bg-muted/50 transition-colors group">
                             <FileText size={16} className="text-muted-foreground shrink-0" />
@@ -160,14 +160,14 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
             {user && (
               <>
                 <ThemeToggle />
-                <Link href="/notifications" className="relative p-2 rounded-xl hover:bg-muted/50 transition-all text-foreground">
+                <Link href="/notifications" className="relative p-2 rounded-xl hover:bg-muted/50 transition-all text-foreground" title="Notifications">
                   <Bell size={18} strokeWidth={2.5} />
                   {unreadCount && unreadCount > 0 ? (
                     <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full border border-white flex items-center justify-center animate-reveal">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   ) : (
-                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-black/10 rounded-full border border-white" />
+                    <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-foreground/10 rounded-full border border-background" />
                   )}
                 </Link>
 
@@ -179,34 +179,34 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
                 <div className="relative hidden lg:block" ref={menuRef}>
                   <button onClick={() => setMenuOpen(!menuOpen)} className="p-1 rounded-full hover:bg-muted/50 transition-all">
-                    <div className="w-9 h-9 rounded-full bg-black text-white flex items-center justify-center text-[10px] font-black uppercase">{user.email?.charAt(0)}</div>
+                    <div className="w-9 h-9 rounded-full bg-foreground text-background flex items-center justify-center text-[10px] font-black uppercase">{user.email?.charAt(0)}</div>
                   </button>
                   {/* ... desktop dropdown ... */}
                   {menuOpen && (
                     <div className="absolute right-0 top-12 w-64 bg-background rounded-[2rem] shadow-2xl border border-border py-2 animate-reveal-down overflow-hidden">
                       <div className="px-6 py-4 border-b border-border/50 mb-2">
                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em] mb-1">Identity</p>
-                        <p className="text-xs font-black text-black truncate">{user.email}</p>
+                        <p className="text-xs font-black text-foreground truncate">{user.email}</p>
                       </div>
                       <div className="py-2 px-2 space-y-0.5">
-                        <Link href="/profile/me" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
+                        <Link href="/profile/me" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
                           <User size={16} /> Profile
                         </Link>
-                        <Link href="/profile/me?tab=collection" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
+                        <Link href="/profile/me?tab=collection" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
                           <Bookmark size={16} /> Collection
                         </Link>
-                        <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
+                        <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
                           <Layers size={16} /> Dashboard
                         </Link>
-                        <Link href="/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-black hover:bg-muted/50 rounded-xl transition-all">
+                        <Link href="/settings" onClick={() => setMenuOpen(false)} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-xl transition-all">
                           <Settings size={16} /> Settings
                         </Link>
-                        <Link href="https://shyam-typeform.typeform.com/to/questions" target="_blank" className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-600 hover:bg-amber-50 rounded-xl transition-all">
+                        <Link href="https://shyam-typeform.typeform.com/to/questions" target="_blank" className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-amber-600 hover:bg-amber-500/10 rounded-xl transition-all">
                           <Zap size={16} /> Network Feedback
                         </Link>
                       </div>
                       <div className="border-t border-border/50 mt-2 pt-2 px-2 pb-2">
-                        <button onClick={() => logout()} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-600 hover:bg-red-50 w-full text-left rounded-xl transition-all">
+                        <button onClick={() => logout()} className="flex items-center gap-3 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-red-600 hover:bg-red-500/10 w-full text-left rounded-xl transition-all">
                           <LogOut size={16} /> Logout
                         </button>
                       </div>
@@ -236,7 +236,9 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
           className={`absolute top-0 left-0 bottom-0 w-[85%] max-w-[320px] bg-background border-r border-border p-6 flex flex-col transition-transform duration-500 ease-expo ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           <div className="flex justify-between items-center mb-10">
-            <span className="text-xl font-black tracking-tighter uppercase">LUMEN</span>
+            <Link href={user ? "/feed" : "/"} onClick={() => setMobileMenuOpen(false)} className="text-xl font-black tracking-tighter uppercase">
+              LUMEN
+            </Link>
             <button onClick={() => setMobileMenuOpen(false)} className="p-2 -mr-2 bg-muted/30 rounded-full">
               <CloseIcon size={18} />
             </button>
@@ -244,36 +246,36 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
           <div className="flex-1 overflow-y-auto space-y-8">
             <nav className="space-y-6">
-              <Link href="/feed" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black">
-                <Layers size={18} /> Archive
+              <Link href="/feed" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground">
+                <Layers size={18} /> Home
               </Link>
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground">
                 <Zap size={18} /> About
               </Link>
               {user && (
-                <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-black">
-                  <PenTool size={18} className="text-black" strokeWidth={3} /> Write Narrative
+                <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-foreground">
+                  <PenTool size={18} className="text-foreground" strokeWidth={3} /> Write Post
                 </Link>
               )}
               {user && (
                 <div className="pt-4 space-y-6 border-t border-border/50">
-                  <Link href="/profile/me" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
+                  <Link href="/profile/me" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all">
                     <User size={18} /> Profile
                   </Link>
-                  <Link href="/profile/me?tab=collection" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
+                  <Link href="/profile/me?tab=collection" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all">
                     <Bookmark size={18} /> Collection
                   </Link>
-                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
+                  <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all">
                     <Layers size={18} /> Dashboard
                   </Link>
-                  <Link href="/notifications" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
-                    <Bell size={18} /> Signals
+                  <Link href="/notifications" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all">
+                    <Bell size={18} /> Notifications
                   </Link>
-                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-black transition-all">
-                    <Settings size={18} /> Protocol
+                  <Link href="/settings" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-all">
+                    <Settings size={18} /> Settings
                   </Link>
                   <Link href="https://shyam-typeform.typeform.com/to/questions" target="_blank" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-4 text-sm font-black uppercase tracking-widest text-amber-600">
-                    <Zap size={18} /> Transmission Feedback
+                    <Zap size={18} /> Network Feedback
                   </Link>
                 </div>
               )}
@@ -282,7 +284,7 @@ export default function Navbar({ user }: { user: SupabaseUser | null }) {
 
           {user && (
             <div className="pt-6 border-t border-border">
-              <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="w-full py-3 h-12 bg-red-50 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+              <button onClick={() => { logout(); setMobileMenuOpen(false); }} className="w-full py-3 h-12 bg-red-500/10 text-red-600 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2">
                 <LogOut size={16} /> Logout
               </button>
             </div>

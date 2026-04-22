@@ -36,8 +36,8 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   if (!post) return { title: 'Post Not Found' };
 
   const description = post.is_anonymous 
-    ? `A ${post.type} synchronization by an anonymous resident.` 
-    : `A ${post.type} synchronization by ${post.profile?.full_name || post.profile?.username || 'a resident'}.`;
+    ? `A ${post.type} post by an anonymous resident.` 
+    : `A ${post.type} post by ${post.profile?.full_name || post.profile?.username || 'a resident'}.`;
 
   const ogImage = post.cover_image || 'https://lumen-archive.vercel.app/og-default.png';
 
@@ -129,7 +129,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <div className="flex items-center justify-between gap-4 mb-8 md:mb-12">
             <div className="flex items-center gap-4">
               <Link href="/feed" className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground hover:text-foreground transition-colors">
-                Archive
+                Home
               </Link>
               <span className="text-border">/</span>
               <span className="text-[9px] font-black uppercase tracking-[0.3em] text-foreground">
@@ -163,7 +163,7 @@ export default async function PostPage({ params }: PostPageProps) {
           </div>
 
 
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-8 md:mb-10 leading-[1.05] text-foreground tracking-tight">
+          <h1 id="post-title" className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-8 md:mb-10 leading-[1.05] text-foreground tracking-tight">
             {post.title}
           </h1>
 
@@ -252,21 +252,27 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Main Content Area */}
           <div className="space-y-12">
-            <PostAssetMeta 
-              postId={post.id} 
-              slug={post.slug} 
-              healthStatus={post.health_status || 'certified'} 
-              validationScore={post.validation_score || 100}
-              isAuthor={isOwnPost}
-              isForkable={post.is_forkable ?? true}
-            />
             <ArchivalReader content={contentObj} />
+
+            {/* Remix / Asset Card (Hidden for Micro/Audio, Anonymous, and if Remixing is Disabled) */}
+            {(post.type === 'blog' || post.type === 'code') && post.is_forkable && !post.is_anonymous && (
+              <div id="narrative-history" className="mt-20">
+                <PostAssetMeta 
+                  postId={post.id} 
+                  slug={post.slug} 
+                  healthStatus={post.health_status || 'certified'} 
+                  validationScore={post.validation_score || 100}
+                  isAuthor={isOwnPost}
+                  isForkable={post.is_forkable ?? true}
+                />
+              </div>
+            )}
           </div>
 
           {/* Code Snippets */}
           {post.code_snippets && post.code_snippets.length > 0 && (
             <div className="mt-20 pt-20 border-t border-border space-y-10">
-              <h2 className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em] text-center mb-12">Technical Appendix</h2>
+              <h2 className="text-xs font-black text-muted-foreground uppercase tracking-[0.3em] text-center mb-12">Code Snippets</h2>
               {post.code_snippets.map((snippet: any) => (
                 <div key={snippet.id} className="rounded-2xl overflow-hidden border border-border bg-card shadow-2xl shadow-foreground/5">
                   <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/5">
@@ -296,7 +302,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
           {/* Comments Section */}
           <div id="comments" className="mt-32 pt-16 border-t border-border">
-            <h3 className="text-3xl font-black mb-12 tracking-tight text-foreground">Responses</h3>
+            <h3 className="text-3xl font-black mb-12 tracking-tight text-foreground">Comments</h3>
             <CommentSection postId={post.id} initialCount={post.comments_count || 0} />
           </div>
         </article>
@@ -322,7 +328,7 @@ export default async function PostPage({ params }: PostPageProps) {
             <div className="space-y-4">
               <h4 className="font-extrabold text-2xl text-foreground tracking-tight">{authorName}</h4>
               <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                {post.profile?.bio || `Curating signals and chronicles on LUMEN.`}
+                {post.profile?.bio || `Writing stories and posts on LUMEN.`}
               </p>
             </div>
             {!post.is_anonymous && !isOwnPost && post.author_id && (
@@ -337,7 +343,7 @@ export default async function PostPage({ params }: PostPageProps) {
           {/* More from Author */}
           {moreFromAuthor && moreFromAuthor.length > 0 && (
             <div className="pt-10 border-t border-border space-y-8">
-              <h5 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Related Syncs</h5>
+              <h5 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Related Posts</h5>
               <div className="space-y-8">
                 {moreFromAuthor.map((p) => {
                   const PIcon = TYPE_ICONS[p.type as keyof typeof TYPE_ICONS] || FileText;
@@ -358,7 +364,7 @@ export default async function PostPage({ params }: PostPageProps) {
               </div>
               {!post.is_anonymous && post.profile?.username && (
                 <Link href={`/profile/${post.profile.username}`} className="inline-block text-[10px] font-black uppercase tracking-widest text-foreground hover:underline underline-offset-4 decoration-2">
-                  View Full Archive →
+                  View All Posts →
                 </Link>
               )}
             </div>

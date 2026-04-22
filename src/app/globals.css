@@ -11,15 +11,17 @@
 }
 
 :root {
-  --background: #f4f4f5;
-  --foreground: #000000;
+  --background: #fafafa;
+  --foreground: #0c0c0e;
   --card: #ffffff;
   --card-border: #e4e4e7;
-  --muted: #e4e4e7;
-  --muted-foreground: #525252;
-  --border: #d4d4d8;
-  --accent: #111111;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --border: #e4e4e7;
+  --accent: #000000;
   --accent-foreground: #ffffff;
+  --shimmer: rgba(0, 0, 0, 0.04);
+  --luminous-glow: radial-gradient(circle at 50% -20%, rgba(139, 92, 246, 0.12), transparent 85%);
 
   --font-heading: 'Inter', sans-serif;
   --font-serif: 'Playfair Display', serif;
@@ -28,15 +30,17 @@
 }
 
 [data-theme='dark'] {
-  --background: #09090b;
+  --background: #0c0c0e;
   --foreground: #fafafa;
-  --card: #141417;
-  --card-border: #27272a;
-  --muted: #18181b;
+  --card: #16161a;
+  --card-border: #232327;
+  --muted: #1c1c21;
   --muted-foreground: #a1a1aa;
-  --border: #27272a;
+  --border: #232327;
   --accent: #ffffff;
   --accent-foreground: #000000;
+  --shimmer: rgba(255, 255, 255, 0.05);
+  --luminous-glow: radial-gradient(circle at 50% -20%, rgba(120, 119, 198, 0.15), transparent 80%);
 }
 
 
@@ -214,7 +218,7 @@ h6 {
 .lumen-shimmer {
   position: relative;
   overflow: hidden;
-  background-color: #e4e4e7;
+  background-color: var(--muted);
 }
 
 .lumen-shimmer::after {
@@ -227,7 +231,7 @@ h6 {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.4),
+    var(--shimmer),
     transparent
   );
   animation: shimmer 1.5s infinite;

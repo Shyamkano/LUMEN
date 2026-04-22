@@ -27,7 +27,7 @@ export function ThemeToggle() {
       variant="ghost"
       size="icon"
       onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-      className="w-10 h-10 rounded-full border border-black/5 dark:border-white/10 hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-all group relative overflow-hidden"
+      className="w-10 h-10 rounded-full border border-border hover:bg-foreground hover:text-background transition-all group relative overflow-hidden"
       title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
     >
       <div className="relative z-10">

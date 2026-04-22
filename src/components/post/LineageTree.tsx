@@ -35,10 +35,10 @@ export function LineageTree({ parent, current, forks }: LineageTreeProps) {
       <div className="text-center space-y-4 mb-20">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 border border-blue-100 text-blue-600">
           <GitBranch size={14} className="animate-pulse" />
-          <span className="text-[10px] font-black uppercase tracking-widest">Asset Lineage Tree</span>
+          <span className="text-[10px] font-black uppercase tracking-widest">Story Evolution</span>
         </div>
         <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none">
-          The Genealogy <br />of Thought
+          History <br />of this Story
         </h2>
       </div>
 
@@ -50,11 +50,11 @@ export function LineageTree({ parent, current, forks }: LineageTreeProps) {
           {/* Parent Node (The Seed) */}
           {parent && (
             <div className="relative flex items-start gap-8 group">
-              <div className="relative z-10 w-12 h-12 rounded-full border-2 border-border bg-white flex items-center justify-center shrink-0 group-hover:border-foreground transition-all">
+              <div className="relative z-10 w-12 h-12 rounded-full border-2 border-border bg-card flex items-center justify-center shrink-0 group-hover:border-foreground transition-all">
                 <GitCommit size={20} className="text-muted-foreground group-hover:text-foreground" />
               </div>
               <div className="pt-2 space-y-2">
-                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Original Seed</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">First Version</span>
                 <Link href={`/post/${parent.slug}`} className="block">
                   <h3 className="text-xl font-bold hover:underline underline-offset-4 decoration-2">
                     {parent.title}
@@ -71,17 +71,17 @@ export function LineageTree({ parent, current, forks }: LineageTreeProps) {
 
           {/* Current Node */}
           <div className="relative flex items-start gap-8 group">
-            <div className="relative z-10 w-12 h-12 rounded-full border-4 border-foreground bg-black flex items-center justify-center shrink-0 shadow-xl shadow-black/20">
-              <GitBranch size={20} className="text-white" />
+            <div className="relative z-10 w-12 h-12 rounded-full border-4 border-foreground bg-foreground flex items-center justify-center shrink-0 shadow-xl shadow-black/20">
+              <GitBranch size={20} className="text-background" />
             </div>
-            <div className="pt-2 p-8 rounded-[2rem] bg-zinc-50 border border-zinc-200 flex-1 space-y-3">
-              <span className="text-[9px] font-black uppercase tracking-widest text-foreground">Current Asset</span>
+            <div className="pt-2 p-8 rounded-[2rem] bg-muted/10 border border-border flex-1 space-y-3">
+              <span className="text-[9px] font-black uppercase tracking-widest text-foreground">Current Story</span>
               <h3 className="text-2xl font-black tracking-tight uppercase leading-none">
                 {current.title}
               </h3>
               <div className="flex items-center gap-4 text-[10px] text-zinc-500 font-black uppercase tracking-widest">
                  <div className="flex items-center gap-1.5">@{current.author.username}</div>
-                 <div className="flex items-center gap-1.5">Synchronized: {format(new Date(current.created_at), 'MMM d, yyyy')}</div>
+                 <div className="flex items-center gap-1.5">Posted: {format(new Date(current.created_at), 'MMM d, yyyy')}</div>
               </div>
             </div>
           </div>
@@ -90,11 +90,11 @@ export function LineageTree({ parent, current, forks }: LineageTreeProps) {
           {forks.length > 0 && (
             <div className="space-y-8 pl-12">
                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                 Branches Adapted ({forks.length}) <ChevronRight size={12} />
+                 Evolved Versions ({forks.length}) <ChevronRight size={12} />
                </span>
                <div className="grid grid-cols-1 gap-4">
                  {forks.map((fork) => (
-                   <div key={fork.id} className="relative flex items-center gap-6 p-6 rounded-2xl border border-border bg-white hover:border-foreground transition-all group">
+                   <div key={fork.id} className="relative flex items-center gap-6 p-6 rounded-2xl border border-border bg-card hover:border-foreground transition-all group">
                      <div className="absolute -left-[45px] top-1/2 w-8 h-0.5 bg-border group-hover:bg-foreground transition-colors" />
                      <div className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
                        {fork.author.avatar_url ? (
@@ -122,7 +122,7 @@ export function LineageTree({ parent, current, forks }: LineageTreeProps) {
           {forks.length === 0 && (
              <div className="pl-12 opacity-40">
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  The lineage ends here. Seed has no further adaptations.
+                  This story hasn't evolved further yet.
                 </p>
              </div>
           )}

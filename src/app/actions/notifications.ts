@@ -11,19 +11,21 @@ export async function getNotifications() {
 
   if (!user) return [];
 
+  console.log(`[getNotifications] Fetching for user: ${user.id}`);
+
   const { data: notifications, error } = await supabase
     .from('notifications')
-    .select('*, actor:profiles!actor_id(*), post:posts(*)')
+    .select('*, actor:profiles!actor_id(username, full_name, avatar_url), post:posts(title, slug)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
     .limit(50);
 
   if (error) {
-    console.error('Error fetching notifications:', error);
-    // Return empty if table doesn't exist yet to avoid crash
+    console.error('[getNotifications] Error:', error);
     return [];
   }
 
+  console.log(`[getNotifications] Found ${notifications?.length || 0} notifications`);
   return notifications || [];
 }
 
@@ -103,4 +105,37 @@ export async function getUnreadCount() {
 
   if (error) return 0;
   return count || 0;
+}
+
+/**
+ * Drops a system notification about new features
+ */
+export async function notifyNewFeature(featureName: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const content = `New Feature: ${featureName} is now active!`;
+
+  // Check if already notified in DB
+  const { data: existing } = await supabase
+    .from('notifications')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('type', 'system')
+    .eq('content', content)
+    .single();
+
+  if (existing) return;
+  
+  // Create notification
+  await supabase.from('notifications').insert([{
+    user_id: user.id,
+    actor_id: user.id,
+    type: 'system',
+    is_read: false,
+    content: content
+  }]);
+
+  revalidatePath('/notifications');
 }

@@ -2,7 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useState, useMemo } from 'react';
 
 function makeQueryClient() {
   return new QueryClient({
@@ -10,6 +10,7 @@ function makeQueryClient() {
       queries: {
         staleTime: 60 * 1000,
         refetchOnWindowFocus: false,
+        retry: 1,
       },
     },
   });
@@ -23,16 +24,14 @@ function getQueryClient() {
     return makeQueryClient();
   } else {
     // Browser: make a new query client if we don't already have one
-    // This is very important, so we don't re-make a new client if React
-    // suspends during hydration, or if there's a re-render lower up the tree.
     if (!browserQueryClient) browserQueryClient = makeQueryClient();
     return browserQueryClient;
   }
 }
 
 export function QueryProvider({ children }: { children: ReactNode }) {
-  // Use state to ensure the query client is stable across re-renders
-  const [queryClient] = useState(() => getQueryClient());
+  // Use useMemo for better stability in Next.js 15+
+  const queryClient = useMemo(() => getQueryClient(), []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -41,4 +40,3 @@ export function QueryProvider({ children }: { children: ReactNode }) {
     </QueryClientProvider>
   );
 }
-

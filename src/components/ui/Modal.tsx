@@ -40,12 +40,12 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
       />
       
       {/* Container */}
-      <div className="bg-white rounded-[2.5rem] w-full max-w-md relative z-10 shadow-2xl border border-black/5 animate-reveal overflow-hidden">
+      <div className="bg-background rounded-[2.5rem] w-full max-w-md relative z-10 shadow-2xl border border-border animate-reveal overflow-hidden">
         <div className="px-8 pt-8 flex items-center justify-between">
           <h3 className="text-xl font-black uppercase tracking-tight">{title}</h3>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-zinc-100 rounded-full transition-all"
+            className="p-2 hover:bg-muted rounded-full transition-all"
           >
             <X size={20} />
           </button>

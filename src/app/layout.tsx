@@ -34,6 +34,8 @@ export const metadata: Metadata = {
 
 
 
+import { OnbordaProvider } from '@/components/OnbordaProvider';
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -45,13 +47,15 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground selection:bg-black selection:text-white antialiased overflow-x-hidden" suppressHydrationWarning>
-        <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false}>
+        <ThemeProvider attribute="data-theme" defaultTheme="light" enableSystem={false} enableColorScheme={false} storageKey="lumen-theme-v2">
           <QueryProvider>
-            <Navbar user={user} />
-            <main className="pt-20 pb-16">
-              {children}
-            </main>
-            <Footer />
+            <OnbordaProvider>
+              <Navbar user={user} />
+              <main className="pt-20 pb-16">
+                {children}
+              </main>
+              <Footer />
+            </OnbordaProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>

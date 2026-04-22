@@ -506,6 +506,7 @@ export default function EditorWorkspace() {
             </div>
 
             <Button
+              id="publish-button"
               onClick={handleSubmit(onSubmit)}
               disabled={loading}
               className="rounded-full h-10 md:h-12 px-6 md:px-8 gap-2 font-black uppercase tracking-widest text-[10px]"
@@ -602,13 +603,14 @@ export default function EditorWorkspace() {
               />
 
               <div className="space-y-2">
-                <input
-                  {...register('title')}
-                  autoFocus
-                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
-                  placeholder={isMicro ? "Optional title..." : "Post Title"}
-                  className="w-full text-3xl md:text-4xl font-black placeholder:text-muted-foreground/20 outline-none border-none bg-transparent tracking-tight text-foreground"
-                />
+                  <input
+                    {...register('title')}
+                    id="editor-main"
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                    placeholder={isMicro ? "Optional title..." : "Post Title"}
+                    className="w-full text-3xl md:text-4xl font-black placeholder:text-muted-foreground/20 outline-none border-none bg-transparent tracking-tight text-foreground"
+                  />
                 
                 <div className="flex flex-wrap items-center gap-2 pt-4">
                   {tags.map((tag) => (
