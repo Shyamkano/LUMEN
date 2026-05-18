@@ -136,6 +136,13 @@ export default function SettingsHubPage() {
       href: "/settings/preferences",
       icon: Layers,
       color: "bg-emerald-50 text-emerald-600"
+    },
+    {
+      title: "Developer Protocol",
+      description: "API keys and external integration endpoints.",
+      href: "/settings/developer",
+      icon: Globe,
+      color: "bg-zinc-100 text-zinc-900"
     }
   ];
 

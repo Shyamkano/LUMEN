@@ -38,7 +38,7 @@ export async function toggleLike(postId: string) {
     }
 
     revalidatePath('/');
-    
+
     // Increment daily likes in analytics
     const today = new Date().toISOString().split('T')[0];
     const { data: existing } = await supabase
@@ -47,7 +47,7 @@ export async function toggleLike(postId: string) {
       .eq('post_id', postId)
       .eq('date', today)
       .maybeSingle();
-      
+
     if (existing) {
       await supabase.from('post_analytics').update({ likes: (existing.likes || 0) + 1 }).eq('id', existing.id);
     } else {
@@ -153,7 +153,7 @@ export async function getUserBookmarks() {
   const followingSet = new Set((followingData || []).map(f => f.following_id));
   const profileMap = new Map((profiles || []).map(p => [p.id, p]));
   const anonMap = new Map((anonIdentities || []).map(a => [a.user_id, a]));
-  
+
   const likesCount: Record<string, number> = {};
   (likesData || []).forEach(l => { likesCount[l.post_id] = (likesCount[l.post_id] || 0) + 1; });
   const commentsCount: Record<string, number> = {};
@@ -174,7 +174,7 @@ export async function getUserBookmarks() {
  */
 export async function trackView(postId: string) {
   const supabase = await createClient();
-  
+
   // 1. Increment total views on the post using the secure RPC
   // This bypasses RLS and handles atomicity
   const { error: rpcError } = await supabase.rpc('increment_post_views', { post_id_param: postId });
@@ -182,13 +182,13 @@ export async function trackView(postId: string) {
   if (rpcError) {
     console.warn('RPC View Increment failed, falling back:', rpcError);
     // Use an UPSERT approach for the fallback to avoid race conditions
-    await supabase.rpc('increment_post_views_v2', { post_id_param: postId }); 
+    await supabase.rpc('increment_post_views_v2', { post_id_param: postId });
     // If V2 RPC not available, the existing trackView logic below still handles daily stats
   }
 
   // 2. Update daily analytics
   const today = new Date().toISOString().split('T')[0];
-  
+
   // Try to upsert daily analytics
   // First check if exists
   const { data: existingAnalytics } = await supabase
@@ -228,7 +228,7 @@ export async function getUserAnalytics() {
   if (!posts) return null;
 
   const postIds = posts.map(p => p.id);
-  
+
   // 2. Get total likes and comments
   const [
     { count: totalLikes },
@@ -243,7 +243,7 @@ export async function getUserAnalytics() {
   // 3. Get daily analytics for the last 30 days
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  
+
   const { data: dailyAnalytics } = await supabase
     .from('post_analytics')
     .select('*')
@@ -447,7 +447,7 @@ export async function validatePost(postId: string, isPositive: boolean, feedback
 
     await supabase
       .from('posts')
-      .update({ 
+      .update({
         validation_score: score,
         health_status: healthStatus
       })
@@ -460,7 +460,7 @@ export async function validatePost(postId: string, isPositive: boolean, feedback
 
 export async function calculateLegacyScore(postId: string) {
   const supabase = await createClient();
-  
+
   // 1. Get current post
   const { data: current } = await supabase.from('posts').select('content, parent_id').eq('id', postId).single();
   if (!current || !current.parent_id) return { originalPercentage: 100, remixerPercentage: 0 };
@@ -473,7 +473,7 @@ export async function calculateLegacyScore(postId: string) {
   // We compare stringified JSON to detect zero-effort forks
   const parentContentStr = JSON.stringify(parent.content);
   const currentContentStr = JSON.stringify(current.content);
-  
+
   if (parentContentStr === currentContentStr) {
     return { originalPercentage: 100, remixerPercentage: 0 };
   }
@@ -497,7 +497,7 @@ export async function calculateLegacyScore(postId: string) {
 
 export async function getNicheInsights() {
   const supabase = await createClient();
-  
+
   // 1. Get all recent public posts (last 30 days)
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -530,11 +530,11 @@ export async function getNicheInsights() {
 
   // Add request counts to the map
   requests?.forEach(req => {
-     (req.tags || []).forEach((tag: string) => {
-        const current = nicheMap.get(tag) || { totalViews: 0, postCount: 0, forkCount: 0, requestCount: 0 };
-        current.requestCount += 1;
-        nicheMap.set(tag, current);
-     });
+    (req.tags || []).forEach((tag: string) => {
+      const current = nicheMap.get(tag) || { totalViews: 0, postCount: 0, forkCount: 0, requestCount: 0 };
+      current.requestCount += 1;
+      nicheMap.set(tag, current);
+    });
   });
 
   // 3. Calculate Intensity Score
@@ -544,7 +544,7 @@ export async function getNicheInsights() {
     const postCount = Math.max(1, stats.postCount);
     const avgViews = stats.totalViews / postCount;
     const expansionRatio = (stats.forkCount / postCount) * 100;
-    
+
     // Simple normalization for a 0-100 intensity score
     const intensity = Math.min(100, Math.round((avgViews / 10) + (expansionRatio * 0.6) + (stats.requestCount * 2)));
 
@@ -596,7 +596,7 @@ export async function resolveReport(reportId: string, status: 'reviewed' | 'acti
     .select('role, username')
     .eq('id', user.id)
     .single();
-  
+
   const isAuthorized = profile?.role === 'admin' || profile?.username === 'lumen';
   if (!isAuthorized) return { error: 'Insufficient Network Permissions.' };
 

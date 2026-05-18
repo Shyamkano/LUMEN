@@ -83,7 +83,7 @@ export async function addComment(postId: string, content: string, parentId?: str
 
   // Trigger Notifications
   const { data: post } = await supabase.from('posts').select('author_id').eq('id', postId).single();
-  
+
   if (parentId) {
     // Reply notification
     const { data: parentComment } = await supabase.from('comments').select('user_id').eq('id', parentId).single();
@@ -105,7 +105,7 @@ export async function addComment(postId: string, content: string, parentId?: str
     .eq('post_id', postId)
     .eq('date', today)
     .maybeSingle();
-    
+
   if (existing) {
     await (await createClient()).from('post_analytics').update({ comments: (existing.comments || 0) + 1 }).eq('id', existing.id);
   } else {

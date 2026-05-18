@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 export async function deleteUser(userId: string, reason: string = 'Violated platform protocols.') {
   const supabase = await createClient();
   const { data: { user: admin } } = await supabase.auth.getUser();
-  
+
   // 1. Log the action before deletion
   await supabase.from('moderation_logs').insert([{
     admin_id: admin?.id,
@@ -33,7 +33,7 @@ export async function deleteUser(userId: string, reason: string = 'Violated plat
 export async function toggleBanUser(userId: string, currentStatus: boolean, reason: string = 'Security synchronization required.') {
   const supabase = await createClient();
   const { data: { user: admin } } = await supabase.auth.getUser();
-  
+
   const isBanning = !currentStatus;
 
   // 1. Perform Update

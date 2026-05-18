@@ -17,9 +17,9 @@ import type { PostType, PostStatus } from '@/types';
  */
 function normalizeContentForStorage(content: any, depth = 0): any {
   if (!content || typeof content !== 'object') return content;
-  
+
   const plainContent = JSON.parse(JSON.stringify(content));
-  
+
   if (plainContent.type === 'lumenImage') {
     if (plainContent.attrs) {
       const imageUrl = plainContent.attrs.src || plainContent.attrs.url;
@@ -29,13 +29,13 @@ function normalizeContentForStorage(content: any, depth = 0): any {
       }
     }
   }
-  
+
   if (plainContent.content && Array.isArray(plainContent.content)) {
     plainContent.content = plainContent.content.map((child: any) => {
       return normalizeContentForStorage(child, depth + 1);
     });
   }
-  
+
   return plainContent;
 }
 
@@ -96,21 +96,21 @@ export async function createPost(formData: {
         .eq('user_id', user.id)
         .limit(1)
         .maybeSingle();
-        
+
       if (identity) {
         anonId = identity.id;
       } else {
         // 2. First-time anonymous poster? Create their identity now.
         const { data: newIdentity, error: identError } = await supabase
           .from('anonymous_identities')
-          .insert([{ 
-            user_id: user.id, 
+          .insert([{
+            user_id: user.id,
             alias_name: `Resident-${user.id.slice(0, 4)}`,
             avatar_seed: Math.random().toString(36).substring(7)
           }])
           .select('id')
           .single();
-        
+
         if (identError) {
           console.error('Identity creation failed:', identError);
           return { error: `Anonymous Protocol Failure: ${identError.message}` };
@@ -125,7 +125,7 @@ export async function createPost(formData: {
   console.log('[createPost] === ABOUT TO INSERT INTO POSTS ===');
   console.log('[createPost] content.type:', content.type);
   console.log('[createPost] content nodes count:', content?.content?.length);
-  
+
   // Check specifically for lumenImage nodes BEFORE insert
   if (content?.content) {
     content.content.forEach((node: any, idx: number) => {
@@ -134,7 +134,7 @@ export async function createPost(formData: {
       }
     });
   }
-  
+
   console.log('[createPost] About to insert, content for DB:', JSON.stringify(content, null, 2));
 
   const { data: post, error } = await supabase
@@ -163,22 +163,22 @@ export async function createPost(formData: {
     console.error('Post creation error:', error);
     return { error: error?.message || 'Failed to initialize synchronization.' };
   }
-  
+
   console.log('[createPost] ✅ Post created with ID:', post.id);
   console.log('[createPost] Saved to DB - now fetching back to verify...');
-  
+
   // Immediately fetch back to verify what was saved
   const { data: verifyPost } = await supabase
     .from('posts')
     .select('content')
     .eq('id', post.id)
     .single();
-  
+
   if (verifyPost?.content) {
     console.log('[createPost] ✅ Verified in DB - content retrieved');
     console.log('[createPost] DB content.type:', verifyPost.content.type);
     console.log('[createPost] DB content nodes count:', verifyPost.content?.content?.length);
-    
+
     // Check lumenImage nodes in verified content
     if (verifyPost.content?.content) {
       verifyPost.content.content.forEach((node: any, idx: number) => {
@@ -187,7 +187,7 @@ export async function createPost(formData: {
         }
       });
     }
-    
+
     console.log('[createPost] Full verified content:', JSON.stringify(verifyPost.content, null, 2));
   } else {
     console.error('[createPost] ❌ Could not verify - verifyPost is undefined');
@@ -227,9 +227,9 @@ export async function createPost(formData: {
       .from('followers')
       .select('follower_id')
       .eq('following_id', user.id);
-      
+
     if (followers && followers.length > 0) {
-      await Promise.all(followers.map(f => 
+      await Promise.all(followers.map(f =>
         createNotification(f.follower_id, user.id, 'post', post.id)
       ));
     }
@@ -252,7 +252,7 @@ export async function createPost(formData: {
           resolved_post_id: post.id
         })
         .eq('id', resolved_request_id);
-    
+
       // Notify the requester
       await createNotification(
         request.requester_id,
@@ -267,7 +267,7 @@ export async function createPost(formData: {
   revalidatePath('/feed');
   revalidatePath('/dashboard');
   revalidatePath('/requests');
-  
+
   return { success: true, slug };
 }
 
@@ -306,10 +306,10 @@ export async function updatePost(
 
   // Check if user is admin
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  
+
   const isAdmin = profile?.role === 'admin';
   const client = isAdmin ? createAdminClient() : supabase;
-  
+
   const query = client
     .from('posts')
     .update(updateData)
@@ -330,7 +330,7 @@ export async function updatePost(
   if (isAdmin && formData.status !== undefined) {
     // Fetch target author info for the log
     const { data: targetPost } = await client.from('posts').select('author_id').eq('id', postId).single();
-    
+
     await client.from('moderation_logs').insert([{
       admin_id: user.id,
       post_id: postId,
@@ -369,13 +369,13 @@ export async function updatePost(
   if (updatedPost?.slug) {
     revalidatePath(`/post/${updatedPost.slug}`);
   }
-  
+
   return { success: true, slug: updatedPost?.slug };
 }
 
 export async function getPostLineage(postId: string) {
   const supabase = await createClient();
-  
+
   // 1. Get current post
   const { data: current, error: currentError } = await supabase
     .from('posts')
@@ -397,7 +397,7 @@ export async function getPostLineage(postId: string) {
       .select('*')
       .eq('id', current.parent_id)
       .single();
-    
+
     if (p) {
       const { data: pAuthor } = await supabase.from('profiles').select('username, avatar_url').eq('id', p.author_id).single();
       parent = { ...p, author: pAuthor };
@@ -435,7 +435,7 @@ export async function deletePost(postId: string) {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
   const isAdmin = profile?.role === 'admin';
   const client = isAdmin ? createAdminClient() : supabase;
-  
+
   const query = client
     .from('posts')
     .delete()
@@ -466,7 +466,7 @@ export async function deletePost(postId: string) {
   revalidatePath('/feed');
   revalidatePath('/dashboard');
   revalidatePath('/admin');
-  
+
   return { success: true };
 }
 
@@ -566,7 +566,7 @@ export async function getPostBySlug(slug: string) {
 
   // Profile
   const { data: profile } = await supabase.from('profiles').select('*').eq('id', post.author_id).single();
-  
+
   if (profile?.is_banned) return null; // Hide if author is banned
 
   // Anonymous identity
@@ -601,7 +601,7 @@ export async function getPostBySlug(slug: string) {
     .eq('post_id', post.id);
 
   console.log('[getPostBySlug] Retrieved post content from DB:', post.content);
-  
+
   return {
     ...post,
     author_id: post.is_anonymous ? 'HIDDEN' : post.author_id,
@@ -617,9 +617,9 @@ export async function getPostBySlug(slug: string) {
 export async function getPostsByUsername(username: string) {
   const supabase = await createClient();
   const { data: { user: currentUser } } = await supabase.auth.getUser();
-  
+
   // Fetch current user's role if logged in
-  const { data: currentUserProfile } = currentUser 
+  const { data: currentUserProfile } = currentUser
     ? await supabase.from('profiles').select('role').eq('id', currentUser.id).single()
     : { data: null };
 
@@ -661,7 +661,7 @@ export async function getPostsByUsername(username: string) {
     supabase.from('likes').select('post_id').in('post_id', postIds),
     supabase.from('comments').select('post_id').in('post_id', postIds),
     supabase.from('anonymous_identities').select('*').in('user_id', authorIds),
-    currentUser 
+    currentUser
       ? supabase.from('followers').select('following_id').eq('follower_id', currentUser.id).in('following_id', authorIds)
       : Promise.resolve({ data: [] })
   ]);
@@ -724,7 +724,7 @@ export async function getPostById(id: string) {
 
 export async function getPostsByAlias(aliasName: string) {
   const supabase = await createClient();
-  
+
   // 1. Find the anonymous identity matching this alias
   const { data: identity, error: identityError } = await supabase
     .from('anonymous_identities')
@@ -765,7 +765,7 @@ export async function getPostsByAlias(aliasName: string) {
       ...p,
       likes_count: likesCount[p.id] || 0,
       comments_count: commentsCount[p.id] || 0,
-      anonymous_identity: identity 
+      anonymous_identity: identity
     })),
     identity
   };
@@ -773,7 +773,7 @@ export async function getPostsByAlias(aliasName: string) {
 
 export async function getTrendingPosts() {
   const supabase = await createClient();
-  
+
   // 1. Fetch recent candidate posts
   const { data: posts, error } = await supabase
     .from('posts')
@@ -842,7 +842,7 @@ export async function getPopularTags(limit = 15) {
 
   // Default fallback tags if data is sparse
   const fallbackTags = [
-    'Education', 'Programming', 'Self Improvement', 'Productivity', 'Research', 'Life Logs', 
+    'Education', 'Programming', 'Self Improvement', 'Productivity', 'Research', 'Life Logs',
     'AI', 'Coding', 'Design', 'Future', 'Tech', 'Startup', 'Health', 'Mental Health', 'Writing',
     'Science', 'Math', 'Philosophy', 'Art', 'Music', 'Economics', 'Politics', 'History',
     'Engineering', 'Biology', 'Physics', 'Space', 'Environment', 'Food', 'Travel', 'Fashion',
@@ -855,7 +855,7 @@ export async function getPopularTags(limit = 15) {
 
   // Combine trending and fallbacks, then deduplicate
   const allTags = [...new Set([...trendingTags, ...fallbackTags])];
-  
+
   return allTags.slice(0, limit);
 }
 

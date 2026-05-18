@@ -301,6 +301,20 @@ CREATE POLICY "Users can update own validation" ON post_validations FOR UPDATE U
 CREATE POLICY "Everyone can view requests" ON post_requests FOR SELECT USING (true);
 CREATE POLICY "Users can create requests" ON post_requests FOR INSERT WITH CHECK (auth.uid() = requester_id);
 
+-- ============= 13. API Keys =============
+CREATE TABLE IF NOT EXISTS api_keys (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL DEFAULT 'Default Key',
+  key TEXT UNIQUE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  last_used_at TIMESTAMPTZ
+);
+
+ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own API keys" ON api_keys FOR ALL USING (auth.uid() = user_id);
+
+
 -- ============= TRIGGER: Auto-create profile on signup =============
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
