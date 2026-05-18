@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { generateHTML } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import LinkExt from '@tiptap/extension-link';
@@ -60,8 +61,13 @@ export async function GET(
       );
     }
 
-    // Verify the API key belongs to this user
-    const { data: validKey, error: keyError } = await supabase
+    // Verify the API key belongs to this user using service role to bypass RLS
+    const serviceSupabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
+    const { data: validKey, error: keyError } = await serviceSupabase
       .from('api_keys')
       .select('id')
       .eq('key', apiKey)
